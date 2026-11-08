@@ -46,6 +46,11 @@
                                        Text="Без прав администратора не сохранятся пароли Wi-Fi и ключи BitLocker."/>
                         </DockPanel>
                     </Border>
+                    <Border Style="{StaticResource Card}" Background="{StaticResource WarningDim}" BorderThickness="0" Padding="14,10" Margin="0,0,0,12"
+                            Visibility="{Binding ShowStandardUser, Converter={StaticResource Vis}}">
+                        <TextBlock Style="{StaticResource TextBody}" Foreground="{StaticResource Warning}" TextWrapping="Wrap"
+                                   Text="Это обычная учётная запись, без прав администратора. Твои файлы и настройки соберутся, а пароли Wi-Fi, драйверы и ключи BitLocker — нет: их лучше записать вручную."/>
+                    </Border>
                     <DockPanel Margin="0,0,0,8">
                         <Button DockPanel.Dock="Right" Style="{StaticResource ButtonCompact}" Command="{Binding AddFolder}" VerticalAlignment="Top"
                                 Visibility="{Binding SelectedSection.IsFiles, Converter={StaticResource Vis}}">

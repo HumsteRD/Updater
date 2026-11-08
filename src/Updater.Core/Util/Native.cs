@@ -94,6 +94,33 @@ public static class Native
         }
     }
 
+    [DllImport("advapi32.dll", SetLastError = true)]
+    private static extern bool GetTokenInformation(IntPtr token, int infoClass, out int info, int length, out int returned);
+
+    /// <summary>
+    /// Запрос прав даст права этой же учётной записи: она — администратор, просто сейчас с урезанным токеном UAC.
+    /// false — обычная учётная запись: окно UAC попросит пароль другого человека, и программа увидит его папки,
+    /// а не твои. Тогда работаем без прав и не спрашиваем.
+    /// </summary>
+    public static bool CanElevateAsSelf()
+    {
+        if (IsAdmin()) return false;
+        try
+        {
+            using var id = WindowsIdentity.GetCurrent();
+            // TokenElevationType (18): 1 — без связанного токена (обычный пользователь или UAC выключен), 3 — урезанный.
+            if (!GetTokenInformation(id.Token, 18, out int type, sizeof(int), out _)) return true;
+            return type == 3;
+        }
+        catch
+        {
+            return true;
+        }
+    }
+
+    /// <summary>Коротко для журнала и проверок: «админ», «админ без прав (UAC)», «обычная учётная запись».</summary>
+    public static string AccountKind() => IsAdmin() ? "админ" : CanElevateAsSelf() ? "админ без прав (UAC)" : "обычная учётная запись";
+
     public static int WindowsBuild => Environment.OSVersion.Version.Build;
 
     public static string WindowsName()

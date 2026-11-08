@@ -8,12 +8,17 @@
 #
 # Нужно: виртуализация в BIOS, компонент «Песочница Windows», интернет и выпуск на GitHub новее -Version.
 # Запуск: powershell -ExecutionPolicy Bypass -File tools\sandbox-update-test.ps1 [-Version 1.0.0] [-KeepOpen]
+#
+# -Test rights — другая проверка в той же обвязке (sandbox-rights-inner.ps1): запрос прав для обычной учётной
+# записи и администратора под UAC (окно появляется, ответ «Нет»), ответы netsh, когда Wi-Fi нет.
 
 param(
-    [string]$Version = "1.0.0",
+    [ValidateSet('update', 'rights')][string]$Test = 'update',
+    [string]$Version = "",
     [switch]$KeepOpen,
     [int]$TimeoutMinutes = 15
 )
+if (-not $Version -and $Test -eq 'update') { $Version = '1.0.0' }
 
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path -Parent $PSScriptRoot
@@ -36,11 +41,12 @@ if (Get-Process WindowsSandbox, WindowsSandboxClient, WindowsSandboxRemoteSessio
 if (Test-Path $work) { cmd /c rmdir /s /q "$work" | Out-Null }
 New-Item -ItemType Directory -Force $in, $results | Out-Null
 
-Write-Host "Собираю Updater.exe $Version из текущего кода…"
-& $dotnet publish (Join-Path $repo 'src\Updater.App\Updater.App.csproj') -c Release -o (Join-Path $work 'publish') -nologo -v q "-p:Version=$Version"
+Write-Host "Собираю Updater.exe $(if ($Version) { $Version } else { '(версия из Directory.Build.props)' }) из текущего кода…"
+$versionArg = if ($Version) { @("-p:Version=$Version") } else { @() }
+& $dotnet publish (Join-Path $repo 'src\Updater.App\Updater.App.csproj') -c Release -o (Join-Path $work 'publish') -nologo -v q @versionArg
 if ($LASTEXITCODE -ne 0) { throw "Публикация не удалась" }
 Copy-Item (Join-Path $work 'publish\Updater.exe') (Join-Path $in 'Updater.exe')
-Copy-Item (Join-Path $PSScriptRoot 'sandbox-update-inner.ps1') (Join-Path $in 'inner.ps1')
+Copy-Item (Join-Path $PSScriptRoot "sandbox-$Test-inner.ps1") (Join-Path $in 'inner.ps1')
 if ($KeepOpen) { Set-Content (Join-Path $results 'keep-open.flag') '1' }
 
 $wsb = @"

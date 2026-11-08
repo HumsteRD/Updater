@@ -18,6 +18,8 @@ public sealed class Shell : Observable
     public string UserName { get; } = Environment.UserName;
     public string ComputerName { get; } = Environment.MachineName;
     public bool CanElevate { get; init; } = true;
+    /// <summary>Обычная учётная запись: прав администратора у неё нет, и просить их бессмысленно (UAC даст чужие).</summary>
+    public bool IsStandardUser => !IsAdmin && !CanElevate && !Paths.IsSandbox;
 
     public Shell() => Current = this;
 

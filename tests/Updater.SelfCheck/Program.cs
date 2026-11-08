@@ -91,6 +91,7 @@ sealed class Checks(bool live)
         MainstreamPrograms();
         OnlyWhatWasThere();
         WingetCodes();
+        WifiAndRights();
         await SelfUpdateAsync();
         await SettingsSandboxAsync();
         await EndToEndAsync();
@@ -366,6 +367,63 @@ sealed class Checks(bool live)
         {
             try { Directory.Delete(tmp, true); } catch { }
         }
+    }
+
+    // ───────────────────────────── Wi-Fi и права ─────────────────────────────
+
+    void WifiAndRights()
+    {
+        Title("WI-FI И ПРАВА АДМИНИСТРАТОРА");
+        static string Profile(string name, string auth, string? key, bool prot, bool oneX = false) => $"""
+            <?xml version="1.0"?>
+            <WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1">
+              <name>{name}</name>
+              <SSIDConfig><SSID><name>{name}</name></SSID></SSIDConfig>
+              <connectionType>ESS</connectionType><connectionMode>auto</connectionMode>
+              <MSM><security>
+                <authEncryption><authentication>{auth}</authentication><encryption>{(auth == "open" ? "none" : "AES")}</encryption><useOneX>{(oneX ? "true" : "false")}</useOneX></authEncryption>
+                {(key is null ? "" : $"<sharedKey><keyType>passPhrase</keyType><protected>{(prot ? "true" : "false")}</protected><keyMaterial>{key}</keyMaterial></sharedKey>")}
+              </security></MSM>
+            </WLANProfile>
+            """;
+        var root = Path.Combine(Path.GetTempPath(), "updater-wifi-" + Guid.NewGuid().ToString("N")[..8]);
+        var dir = Package.Abs(root, Package.WifiDir);
+        Directory.CreateDirectory(dir);
+        try
+        {
+            File.WriteAllText(Path.Combine(dir, "Wi-Fi-Дом.xml"), Profile("Дом", "WPA2PSK", "пароль123", false));
+            File.WriteAllText(Path.Combine(dir, "Wi-Fi-Дача.xml"), Profile("Дача", "WPA3SAE", "01000000D08C9DDF0115D1118C7A00C04FC297EB0100", true));
+            File.WriteAllText(Path.Combine(dir, "Wi-Fi 2-Кафе.xml"), Profile("Кафе", "open", null, false));
+            File.WriteAllText(Path.Combine(dir, "Беспроводная сеть-Офис.xml"), Profile("Офис", "WPA2", null, false, oneX: true));
+            var home = Wifi.Inspect(Path.Combine(dir, "Wi-Fi-Дом.xml"));
+            var dacha = Wifi.Inspect(Path.Combine(dir, "Wi-Fi-Дача.xml"));
+            var cafe = Wifi.Inspect(Path.Combine(dir, "Wi-Fi 2-Кафе.xml"));
+            var office = Wifi.Inspect(Path.Combine(dir, "Беспроводная сеть-Офис.xml"));
+            Check(home is { Name: "Дом", NeedsKey: true, KeyClear: true, PasswordLost: false }, "пароль открытым текстом — встанет на новом ПК");
+            Check(dacha is { Name: "Дача", PasswordLost: true }, "пароль, зашифрованный под старый ПК, распознан как потерянный");
+            Check(cafe is { Name: "Кафе", NeedsKey: false, PasswordLost: false } && office is { Name: "Офис", NeedsKey: false }, "открытой и корпоративной сети пароль не нужен");
+            Check(Wifi.Inspect(Path.Combine(dir, "нет.xml")) is null, "битый или пропавший файл — без падения");
+
+            var m = new PackageManifest { WifiProfiles = ["Wi-Fi-Дом.xml", "Wi-Fi-Дача.xml", "Wi-Fi 2-Кафе.xml", "Беспроводная сеть-Офис.xml"] };
+            var plan = RestorePlan.Build(m, root, PathResolver.Sandbox(Path.Combine(root, "new")));
+            var wifi = plan.First(i => i.Id == RestorePlan.WifiId).Children;
+            Check(wifi.Select(c => c.Title).SequenceEqual(["Дом", "Дача", "Кафе", "Офис"]), "в плане — настоящие имена сетей (не «Fi-Дом»)", string.Join(", ", wifi.Select(c => c.Title)));
+            Check(wifi.Count(c => c.Chip == "без пароля") == 1 && wifi.First(c => c.Title == "Дача").Chip == "без пароля", "сеть с потерянным паролем помечена в плане");
+        }
+        finally
+        {
+            try { Directory.Delete(root, true); } catch { }
+        }
+
+        Check(Wifi.NoWifiHere("The Wireless AutoConfig Service (wlansvc) is not running.") && Wifi.NoWifiHere("There is no wireless interface on the system.")
+              && Wifi.NoWifiHere("Служба автонастройки беспроводной сети (wlansvc) не запущена.") && Wifi.NoWifiHere("В системе нет беспроводных интерфейсов.")
+              && !Wifi.NoWifiHere("Profile Дом is added on interface Wi-Fi."), "ответы netsh «здесь нет Wi-Fi» (английский и русский)");
+        Check(Wifi.LooksWireless("Intel(R) Wi-Fi 6 AX200 160MHz") && Wifi.LooksWireless("Realtek RTL8821CE 802.11ac PCIe Adapter")
+              && Wifi.LooksWireless("Qualcomm Atheros QCA9377 Wireless Network Adapter") && !Wifi.LooksWireless("Realtek PCIe GbE Family Controller"),
+            "драйвер Wi-Fi узнаётся по имени устройства");
+
+        bool admin = Native.IsAdmin(), canElevate = Native.CanElevateAsSelf();
+        Check(!(admin && canElevate), $"права этого запуска: {Native.AccountKind()}", $"admin={admin}, can-elevate={canElevate}");
     }
 
     // ───────────────────────────── Самообновление ─────────────────────────────

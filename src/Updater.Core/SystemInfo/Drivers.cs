@@ -184,6 +184,62 @@ public static class Wifi
 
     public static Task<Proc.Result> ImportAsync(string xmlFile, CancellationToken ct) =>
         Proc.RunAsync(Proc.System32("netsh.exe"), $"wlan add profile filename=\"{xmlFile}\" user=all", ct, timeout: TimeSpan.FromSeconds(30));
+
+    /// <param name="Name">Имя сети (из самого профиля, а не из имени файла: netsh пишет «Wi-Fi-Дом.xml»).</param>
+    /// <param name="NeedsKey">Сеть с паролем (WPA/WPA2/WPA3-Personal, WEP). Открытым и корпоративным он не нужен.</param>
+    /// <param name="KeyClear">Пароль лежит открытым текстом — встанет на любом ПК. Зашифрованный («protected»)
+    /// расшифровывается только на старом ПК: так бывает, если сохранять без прав администратора.</param>
+    public sealed record ProfileInfo(string Name, bool NeedsKey, bool KeyClear)
+    {
+        public bool PasswordLost => NeedsKey && !KeyClear;
+    }
+
+    public static ProfileInfo? Inspect(string xmlFile)
+    {
+        try
+        {
+            var root = System.Xml.Linq.XDocument.Load(xmlFile).Root;
+            if (root is null) return null;
+            System.Xml.Linq.XElement? First(string local) => root.Descendants().FirstOrDefault(e => e.Name.LocalName == local);
+            var name = root.Elements().FirstOrDefault(e => e.Name.LocalName == "name")?.Value
+                       ?? First("SSID")?.Elements().FirstOrDefault(e => e.Name.LocalName == "name")?.Value
+                       ?? Path.GetFileNameWithoutExtension(xmlFile);
+            var auth = First("authentication")?.Value ?? "open";
+            var keyType = First("keyType")?.Value;
+            bool needsKey = keyType is not null || auth.Contains("PSK", StringComparison.OrdinalIgnoreCase)
+                            || auth.Contains("SAE", StringComparison.OrdinalIgnoreCase) || auth.Equals("shared", StringComparison.OrdinalIgnoreCase);
+            var key = First("keyMaterial")?.Value;
+            bool isProtected = string.Equals(First("protected")?.Value?.Trim(), "true", StringComparison.OrdinalIgnoreCase);
+            return new ProfileInfo(name, needsKey, !string.IsNullOrEmpty(key) && !isProtected);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Ответ netsh «Wi-Fi здесь нет»: служба не запущена или нет беспроводного адаптера.</summary>
+    public static bool NoWifiHere(string output) =>
+        Regex.IsMatch(output, @"wlansvc|no wireless interface|нет беспроводн\w* интерфейс|беспроводн\w* интерфейс\w* отсутству", RegexOptions.IgnoreCase);
+
+    /// <summary>Похоже на адаптер Wi-Fi (по имени устройства у драйвера).</summary>
+    public static bool LooksWireless(string? device) =>
+        device is not null && Regex.IsMatch(device, @"wi-?fi|wireless|wlan|802\.11|беспровод", RegexOptions.IgnoreCase);
+
+    /// <summary>
+    /// Дождаться адаптера Wi-Fi: после установки драйвера он появляется не сразу, а служба WLAN стартует вслед за ним.
+    /// </summary>
+    public static async Task<bool> WaitForInterfaceAsync(TimeSpan timeout, CancellationToken ct)
+    {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        while (true)
+        {
+            var r = await Proc.RunAsync(Proc.System32("netsh.exe"), "wlan show interfaces", ct, timeout: TimeSpan.FromSeconds(15)).ConfigureAwait(false);
+            if (r.Ok && !NoWifiHere(r.All)) return true;
+            if (sw.Elapsed >= timeout) return false;
+            await Task.Delay(TimeSpan.FromSeconds(3), ct).ConfigureAwait(false);
+        }
+    }
 }
 
 public sealed record BitLockerVolume(string Drive, bool Protected);

@@ -364,11 +364,15 @@ public sealed class Collector(PathResolver paths, Journal log, JobState state)
             item.StatusText = "Сети не сохранились: " + r.All.Trim();
             return;
         }
-        bool keys = files.Any(f => File.ReadAllText(f).Contains("<keyMaterial>", StringComparison.OrdinalIgnoreCase));
-        if (!keys && !Native.IsAdmin())
+        // Без прав администратора netsh кладёт пароль зашифрованным под этот ПК — на новой винде он не расшифруется.
+        var lost = files.Select(Wifi.Inspect).Where(p => p?.PasswordLost == true).Select(p => p!.Name).ToList();
+        if (lost.Count > 0)
         {
             item.Status = ItemStatus.Warning;
-            item.StatusText = "Сети сохранены без паролей — для паролей нужны права администратора";
+            item.StatusText = lost.Count == files.Length
+                ? "Сети сохранены без паролей — для паролей нужны права администратора"
+                : $"У {lost.Count} из {files.Length} сетей пароль не сохранился: {string.Join(", ", lost.Take(3))}";
+            log.Warn($"Wi-Fi без паролей ({(Native.IsAdmin() ? "есть права" : "нет прав администратора")}): {string.Join(", ", lost)}");
             return;
         }
         Done(item, Fmt.Count(files.Length, "сеть", "сети", "сетей"));

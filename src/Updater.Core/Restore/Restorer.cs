@@ -45,7 +45,16 @@ public static class RestorePlan
                 Note = "Компьютер сам подключится к знакомым сетям.",
             };
             wifi.SizeOverride = Fmt.Count(m.WifiProfiles.Count, "сеть", "сети", "сетей");
-            foreach (var w in m.WifiProfiles) wifi.Children.Add(new SubItem { Id = w, Title = WifiName(w), Selectable = false });
+            foreach (var w in m.WifiProfiles)
+            {
+                var info = Wifi.Inspect(Package.Abs(root, Package.WifiDir + "/" + w));
+                wifi.Children.Add(new SubItem
+                {
+                    Id = w, Title = info?.Name ?? WifiName(w), Selectable = false,
+                    Chip = info?.PasswordLost == true ? "без пароля" : null,
+                    Detail = info?.PasswordLost == true ? "Пароль сохранён зашифрованным под старый ПК — введёшь при подключении" : null,
+                });
+            }
             list.Add(wifi);
         }
 
@@ -220,7 +229,10 @@ public static class RestorePlan
 
     private static string WifiName(string file)
     {
+        // netsh называет файл «<интерфейс>-<сеть>.xml», а интерфейс сам бывает с дефисом: «Wi-Fi», «Wi-Fi 2».
         var name = Path.GetFileNameWithoutExtension(file);
+        var m = System.Text.RegularExpressions.Regex.Match(name, @"^Wi-Fi(?: \d+)?-(.+)$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        if (m.Success) return m.Groups[1].Value;
         int dash = name.IndexOf('-');
         return dash > 0 ? name[(dash + 1)..] : name;
     }
@@ -357,7 +369,8 @@ public sealed class Restorer(PathResolver paths, Journal log)
         if (wifi is not null)
         {
             Apps.CurrentItem = "Сети Wi-Fi";
-            await RestoreWifiAsync(wifi, opt.PackageRoot, ct).ConfigureAwait(false);
+            bool wirelessDriver = drivers?.Children.Any(c => c.Selected && c.Tag is DriverRecord d && Wifi.LooksWireless(d.Device)) == true;
+            await RestoreWifiAsync(wifi, opt.PackageRoot, ct, wirelessDriver).ConfigureAwait(false);
             Apps.Add(1);
         }
         if (programs.Count == 0) return;
@@ -535,7 +548,9 @@ public sealed class Restorer(PathResolver paths, Journal log)
         log.Ok($"Драйверы: {ok} из {selected.Count}");
     }
 
-    public async Task RestoreWifiAsync(PlanItem wifi, string root, CancellationToken ct)
+    /// <param name="wirelessDriverJustInstalled">Только что поставили драйвер Wi-Fi: адаптер появится через несколько
+    /// секунд — ждём его дольше, а не сдаёмся сразу.</param>
+    public async Task RestoreWifiAsync(PlanItem wifi, string root, CancellationToken ct, bool wirelessDriverJustInstalled = false)
     {
         if (paths.IsSandbox)
         {
@@ -543,15 +558,49 @@ public sealed class Restorer(PathResolver paths, Journal log)
             return;
         }
         var dir = Package.Abs(root, Package.WifiDir);
-        int ok = 0, total = 0;
-        foreach (var xml in Directory.Exists(dir) ? Directory.GetFiles(dir, "*.xml") : [])
+        var files = Directory.Exists(dir) ? Directory.GetFiles(dir, "*.xml") : [];
+        if (files.Length == 0)
         {
-            total++;
-            var r = await Wifi.ImportAsync(xml, ct).ConfigureAwait(false);
-            if (r.Ok) ok++;
+            wifi.Status = ItemStatus.Warning;
+            wifi.StatusText = "Нечего добавлять";
+            return;
         }
-        wifi.Status = ok == total ? ItemStatus.Done : ItemStatus.Warning;
-        wifi.StatusText = total == 0 ? "Нечего добавлять" : ok == 0 ? "Не добавились — на этом ПК нет Wi-Fi или не готов драйвер" : $"Добавлено {ok} из {total}";
+        if (!await Wifi.WaitForInterfaceAsync(TimeSpan.FromSeconds(wirelessDriverJustInstalled ? 45 : 6), ct).ConfigureAwait(false))
+        {
+            wifi.Status = ItemStatus.Warning;
+            wifi.StatusText = "На этом ПК пока нет Wi-Fi — сети не добавлены";
+            log.Warn($"Сети Wi-Fi: адаптера нет. Профили лежат в сборке ({Package.WifiDir}) — их можно добавить позже, повторив распаковку только с пунктом «Сети Wi-Fi».");
+            return;
+        }
+        int ok = 0, lost = 0;
+        var failed = new List<string>();
+        foreach (var xml in files)
+        {
+            var info = Wifi.Inspect(xml);
+            var name = info?.Name ?? Path.GetFileNameWithoutExtension(xml);
+            var r = await Wifi.ImportAsync(xml, ct).ConfigureAwait(false);
+            // Адаптер мог моргнуть (служба WLAN перезапускается после драйвера) — одна повторная попытка.
+            if (!r.Ok && Wifi.NoWifiHere(r.All))
+            {
+                await Task.Delay(TimeSpan.FromSeconds(3), ct).ConfigureAwait(false);
+                r = await Wifi.ImportAsync(xml, ct).ConfigureAwait(false);
+            }
+            if (r.Ok)
+            {
+                ok++;
+                if (info?.PasswordLost == true) lost++;
+            }
+            else
+            {
+                failed.Add(name);
+                log.Warn($"Сеть Wi-Fi «{name}» не добавилась: {r.All.Trim()}");
+            }
+        }
+        wifi.Status = failed.Count == 0 && lost == 0 ? ItemStatus.Done : ItemStatus.Warning;
+        wifi.StatusText = ok == 0 ? "Не добавились — см. журнал"
+            : lost > 0 ? $"Добавлено {ok} из {files.Length}; у {lost} пароль не сохранился — введи его при подключении"
+            : $"Добавлено {ok} из {files.Length}";
+        log.Ok($"Сети Wi-Fi: {ok} из {files.Length}");
     }
 
     // ───────────────────────────── Файлы и настройки ─────────────────────────────

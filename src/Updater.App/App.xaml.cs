@@ -23,6 +23,7 @@ public partial class App : Application
         {
             File.WriteAllText(infoFile,
                 $"exe={Collector.SingleFileExe() ?? "(не один файл)"}\nversion={Collector.AppVersion()}\nadmin={Native.IsAdmin()}\n" +
+                $"account={Native.AccountKind()}\ncan-elevate={Native.CanElevateAsSelf()}\n" +
                 $"package={Package.Discover(Shell.ExeDirectory) ?? "(нет)"}\nwinget-index={WingetIndex.Shared.Count}\n");
             Shutdown();
             return;
@@ -43,7 +44,9 @@ public partial class App : Application
         var sandboxRoot = Value("--sandbox-root");
 
         // Одно окно UAC при старте: драйверы, пароли Wi-Fi и системные настройки без прав не сделать.
-        if (!shot && sandboxRoot is null && !Has("--no-elevate") && !Has("--elevated") && !Native.IsAdmin())
+        // Только если учётная запись — администратор: у обычной UAC попросит чужой пароль, и программа
+        // работала бы с чужими папками. Там работаем без прав и не спрашиваем.
+        if (!shot && sandboxRoot is null && !Has("--no-elevate") && !Has("--elevated") && Native.CanElevateAsSelf())
         {
             if (TryRelaunchElevated(e.Args))
             {
@@ -53,7 +56,8 @@ public partial class App : Application
         }
 
         var shell = sandboxRoot is null
-            ? new Shell { CanElevate = !Native.IsAdmin() }
+            // --as-standard-user — только для снимков вёрстки: как видит экран обычная учётная запись.
+            ? new Shell { CanElevate = Native.CanElevateAsSelf() && !(shot && Has("--as-standard-user")) }
             : new Shell { CanElevate = false, Paths = PathResolver.Sandbox(sandboxRoot), Registry = new SandboxRegistry(@"Software\Updater.AutoTest") };
 
         // Права выдала другая учётная запись — тогда «мои папки» оказались бы чужими.

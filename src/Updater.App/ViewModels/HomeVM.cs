@@ -33,7 +33,7 @@ public sealed class HomeVM(Shell shell) : Observable
         && WindowsInstallDate() is { } installed && installed < m.Created.ToUniversalTime();
 
     public string SystemLine =>
-        $"{Package.AppName} {SelfUpdater.Current.ToString(3)} · {shell.WindowsName} · {shell.UserName} · {(shell.IsAdmin ? "права администратора есть" : "без прав администратора")}";
+        $"{Package.AppName} {SelfUpdater.Current.ToString(3)} · {shell.WindowsName} · {shell.UserName} · {(shell.IsAdmin ? "права администратора есть" : shell.IsStandardUser ? "обычная учётная запись, без прав администратора" : "без прав администратора")}";
 
     /// <summary>Только что обновились — коротко говорим об этом.</summary>
     public string UpdatedText => App.Value("--updated-from") is { } from && SelfUpdater.ParseVersion(from) is { } v && SelfUpdater.IsNewer(SelfUpdater.Current, v)

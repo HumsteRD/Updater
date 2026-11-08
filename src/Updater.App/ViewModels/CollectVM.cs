@@ -142,6 +142,7 @@ public sealed class CollectVM : Observable
     public string StartText => Scanning ? "Подожди, считаю…" : $"Собрать {Fmt.Size(SelectedBytes)}";
 
     public bool ShowElevate => !_shell.IsAdmin && _shell.CanElevate;
+    public bool ShowStandardUser => _shell.IsStandardUser;
 
     // ───────────────────────────── Скан ─────────────────────────────
 

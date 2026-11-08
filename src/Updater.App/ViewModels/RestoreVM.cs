@@ -263,8 +263,10 @@ public sealed class RestoreVM : Observable
         if (!_shell.IsAdmin)
             Warnings.Add(new CheckLine
             {
-                Text = "Нет прав администратора",
-                Detail = "Без них не встанут драйверы, сети Wi-Fi и часть настроек, а каждая программа спросит разрешение отдельно.",
+                Text = _shell.IsStandardUser ? "Обычная учётная запись, без прав администратора" : "Нет прав администратора",
+                Detail = _shell.IsStandardUser
+                    ? "Файлы и настройки программ вернутся тебе. Драйверы, сети Wi-Fi и часть настроек Windows без прав не встанут, а программы попросят пароль администратора."
+                    : "Без них не встанут драйверы, сети Wi-Fi и часть настроек, а каждая программа спросит разрешение отдельно.",
                 ActionText = _shell.CanElevate ? "Перезапустить с правами" : null,
                 Action = _shell.CanElevate ? new RelayCommand(Shell.RestartElevated) : null,
                 Glyph = "",
