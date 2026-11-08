@@ -33,6 +33,23 @@ public static class Screenshot
             case "home":
                 break;
 
+            case "update":
+            case "update-error":
+            case "home-update":
+            {
+                var next = SelfUpdater.Current;
+                var r = new SelfUpdater.Release(new Version(next.Major, next.Minor + 1, 0), $"v{next.Major}.{next.Minor + 1}.0",
+                    SelfUpdater.DownloadPrefix + "demo/Updater.exe", 61_900_000, SelfUpdater.DownloadPrefix + "demo/Updater.exe.sha256", SelfUpdater.ReleasesPage,
+                    "Что нового:\n- Программа сама обновляется при запуске\n- На новой винде ставится только то, что было на старой\n- Точнее узнаются браузеры, Office и игровые клиенты\n\n## What's Changed\n* x by @y");
+                var vm = UpdateVM.Create(shell, r, null);
+                shell.Go(vm, "Обновление");
+                vm.Demo(name == "update-error");
+                shell.PendingUpdate = r;
+                // Обновление пропустили — на главном экране остаётся ссылка.
+                if (name == "home-update") shell.GoHome();
+                break;
+            }
+
             case "collect":
             case "collect-progress":
             case "collect-done":

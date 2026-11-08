@@ -10,7 +10,25 @@
     { "match": "^Steam$", "id": "Valve.Steam" },
     { "match": "^Bonjour$", "skip": true },
     { "match": "^Microsoft \\.NET SDK", "skip": true },
-    { "match": "^Dota 2 Mod Manager", "skip": true }
+
+    // Популярные программы, которые индекс понимает неточно. Правила проверяются по порядку: частные — выше общих.
+    { "match": "^Mozilla Firefox .*\\bru\\)", "id": "Mozilla.Firefox.ru", "name": "Firefox" },
+    { "match": "^Mozilla Firefox", "id": "Mozilla.Firefox", "name": "Firefox" },
+    { "match": "^Opera GX", "id": "Opera.OperaGX", "name": "Opera GX" },
+    { "match": "^Opera Air", "id": "Opera.OperaAir", "name": "Opera Air" },
+    { "match": "^Opera Stable", "id": "Opera.Opera", "name": "Opera" },
+    { "match": "^Adobe Acrobat", "id": "Adobe.Acrobat.Reader.64-bit", "name": "Adobe Acrobat Reader",
+      "note": "Ставится бесплатный Acrobat Reader. Если у тебя платный Acrobat Pro — войди в аккаунт Adobe" },
+    { "match": "^(Yandex Music|Яндекс Музыка)", "id": "Yandex.Music", "name": "Яндекс Музыка" },
+    { "match": "^Zoom( Workplace)?( \\(64-bit\\))?$", "id": "Zoom.Zoom", "name": "Zoom" },
+
+    // Нет в winget: вместо поиска в Google — официальный сайт.
+    { "match": "^Microsoft Office .*(Components|Proofing|Language|Shared|MUI|Click)", "skip": true },
+    { "match": "^(Microsoft 365|Microsoft Office)", "name": "Microsoft Office", "url": "https://www.office.com/",
+      "note": "Лицензия привязана к аккаунту Microsoft: войди на office.com и установи Office оттуда" },
+    { "match": "^(µTorrent|uTorrent)", "url": "https://www.utorrent.com/" },
+    { "match": "^Kaspersky", "url": "https://www.kaspersky.ru/downloads" },
+    { "match": "^Punto Switcher", "url": "https://yandex.ru/soft/punto/" }
   ],
 
   // Готовые подборки для новой винды: можно добавить к тому, что было на старой.
@@ -103,7 +121,7 @@
   // Пакет «чтобы всё запускалось»: без этих библиотек часть игр и программ падает с ошибкой про DLL.
   "runtimes": {
     "title": "Библиотеки для игр и программ",
-    "note": "Visual C++ всех лет, DirectX, .NET и XNA — без них часть игр не запускается с ошибкой про DLL.",
+    "note": "Отмечены те, что стояли на старом ПК. Остальные — по желанию: без них часть старых игр не запускается с ошибкой про DLL.",
     "items": [
       "Microsoft.VCRedist.2015+.x64", "Microsoft.VCRedist.2015+.x86",
       "Microsoft.VCRedist.2013.x64", "Microsoft.VCRedist.2013.x86",

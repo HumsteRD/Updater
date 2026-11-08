@@ -3,18 +3,18 @@
   // на новой винде даже без интернета (пока не встали сетевые драйверы) или без winget.
   // Только ссылки с неизменным адресом (без версии в имени), ведущие прямо на файл с сайта разработчика.
   // type: exe или msi. silent — тихая установка (если известна), иначе установщик откроется с вопросами.
-  // bootstrap — то, что осмысленно иметь под рукой в первую очередь (браузер, клиент игр).
+  // Предлагаются только для программ, которые у человека действительно стоят.
   "installers": [
-    { "id": "Google.Chrome", "name": "Google Chrome", "url": "https://dl.google.com/dl/chrome/install/googlechromestandaloneenterprise64.msi", "type": "msi", "silent": "/qn /norestart", "bootstrap": true },
-    { "id": "Mozilla.Firefox", "name": "Firefox", "url": "https://download.mozilla.org/?product=firefox-latest-ssl&os=win64&lang=ru", "type": "exe", "silent": "/S", "bootstrap": true },
-    { "id": "Brave.Brave", "name": "Brave", "url": "https://laptop-updates.brave.com/latest/winx64", "type": "exe", "bootstrap": true },
-    { "id": "Valve.Steam", "name": "Steam", "url": "https://cdn.fastly.steamstatic.com/client/installer/SteamSetup.exe", "type": "exe", "silent": "/S", "bootstrap": true },
+    { "id": "Google.Chrome", "name": "Google Chrome", "url": "https://dl.google.com/dl/chrome/install/googlechromestandaloneenterprise64.msi", "type": "msi", "silent": "/qn /norestart" },
+    { "id": "Mozilla.Firefox", "name": "Firefox", "url": "https://download.mozilla.org/?product=firefox-latest-ssl&os=win64&lang=ru", "type": "exe", "silent": "/S" },
+    { "id": "Brave.Brave", "name": "Brave", "url": "https://laptop-updates.brave.com/latest/winx64", "type": "exe" },
+    { "id": "Valve.Steam", "name": "Steam", "url": "https://cdn.fastly.steamstatic.com/client/installer/SteamSetup.exe", "type": "exe", "silent": "/S" },
     { "id": "Discord.Discord", "name": "Discord", "url": "https://discord.com/api/downloads/distributions/app/installers/latest?channel=stable&platform=win&arch=x64", "type": "exe" },
     { "id": "Telegram.TelegramDesktop", "name": "Telegram", "url": "https://telegram.org/dl/desktop/win64", "type": "exe", "silent": "/VERYSILENT /NORESTART" },
     { "id": "Microsoft.VisualStudioCode", "name": "Visual Studio Code", "url": "https://update.code.visualstudio.com/latest/win32-x64-user/stable", "type": "exe", "silent": "/VERYSILENT /NORESTART /MERGETASKS=!runcode" },
     { "id": "Spotify.Spotify", "name": "Spotify", "url": "https://download.scdn.co/SpotifySetup.exe", "type": "exe" },
     { "id": "Zoom.Zoom", "name": "Zoom", "url": "https://zoom.us/client/latest/ZoomInstallerFull.exe?archType=x64", "type": "exe", "silent": "/quiet" },
-    { "id": "Microsoft.VCRedist.2015+.x64", "name": "Visual C++ (x64)", "url": "https://aka.ms/vs/17/release/vc_redist.x64.exe", "type": "exe", "silent": "/install /quiet /norestart", "bootstrap": true },
-    { "id": "Microsoft.VCRedist.2015+.x86", "name": "Visual C++ (x86)", "url": "https://aka.ms/vs/17/release/vc_redist.x86.exe", "type": "exe", "silent": "/install /quiet /norestart", "bootstrap": true }
+    { "id": "Microsoft.VCRedist.2015+.x64", "name": "Visual C++ (x64)", "url": "https://aka.ms/vs/17/release/vc_redist.x64.exe", "type": "exe", "silent": "/install /quiet /norestart" },
+    { "id": "Microsoft.VCRedist.2015+.x86", "name": "Visual C++ (x86)", "url": "https://aka.ms/vs/17/release/vc_redist.x86.exe", "type": "exe", "silent": "/install /quiet /norestart" }
   ]
 }

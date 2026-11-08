@@ -136,23 +136,29 @@ public static class RestorePlan
             Id = RuntimesId, Section = Section.Programs, Kind = ItemKind.Programs, Title = pack.Title, Glyph = "", Selected = true,
             Note = pack.Note,
         };
-        var oldRuntimeIds = m.Programs.Where(p => p.IsRuntime && p.WingetId is not null).Select(p => p.WingetId!);
-        foreach (var id in pack.Items.Concat(oldRuntimeIds).Distinct(StringComparer.OrdinalIgnoreCase))
+        // Отмечены только библиотеки, которые стояли на старом ПК: ставим человеку то, что ему было нужно,
+        // а не весь набор подряд. Остальное из набора — по желанию.
+        var oldRuntimeIds = m.Programs.Where(p => p.IsRuntime && p.WingetId is not null).Select(p => p.WingetId!)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var id in oldRuntimeIds.Concat(pack.Items).Distinct(StringComparer.OrdinalIgnoreCase))
         {
             var name = WingetIndex.Shared.Find(id)?.Name ?? id;
             bool installed = installedIds.Contains(id);
+            bool had = oldRuntimeIds.Contains(id);
             // Если библиотеку скачали на флешку — ставим с неё (работает без интернета).
             var onFlash = m.Programs.FirstOrDefault(p => string.Equals(p.WingetId, id, StringComparison.OrdinalIgnoreCase)
                 && p.LocalInstaller is not null && File.Exists(Package.Abs(root, p.LocalInstaller)));
+            bool wanted = !installed && (had || onFlash is not null);
             runtimes.Children.Add(new SubItem
             {
                 Id = id, Title = name,
-                Chip = installed ? "уже стоит" : onFlash is not null ? "с флешки" : "winget",
-                ChipIsGood = !installed, Selected = !installed,
+                Chip = installed ? "уже стоит" : onFlash is not null ? "с флешки" : had ? "было на старом ПК" : "по желанию",
+                ChipIsGood = wanted, Selected = wanted,
                 Tag = (object?)onFlash ?? id,
             });
         }
-        runtimes.SizeOverride = Fmt.Count(runtimes.Children.Count, "пакет", "пакета", "пакетов");
+        int runtimesWanted = runtimes.Children.Count(c => c.Selected);
+        runtimes.SizeOverride = runtimesWanted > 0 ? Fmt.Count(runtimesWanted, "пакет", "пакета", "пакетов") : "по желанию";
         list.Add(runtimes);
 
         // Популярное — отмечается вручную.

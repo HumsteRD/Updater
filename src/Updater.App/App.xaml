@@ -20,6 +20,7 @@
             <DataTemplate DataType="{x:Type app:RestoreVM}"><views:RestoreView/></DataTemplate>
             <DataTemplate DataType="{x:Type app:RestoreJobVM}"><views:RestoreJobView/></DataTemplate>
             <DataTemplate DataType="{x:Type app:RestoreDoneVM}"><views:RestoreDoneView/></DataTemplate>
+            <DataTemplate DataType="{x:Type app:UpdateVM}"><views:UpdateView/></DataTemplate>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

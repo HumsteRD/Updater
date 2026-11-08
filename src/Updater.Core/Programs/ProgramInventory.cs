@@ -86,10 +86,16 @@ public static class ProgramInventory
                 if (rule.Skip) continue;
                 id = rule.Id;
             }
-            // 2. Экспорт winget со старого ПК (если winget там был) — самый точный источник.
-            if (id is null && wingetExport is not null && wingetExport.TryGetValue(e.Name, out var exported)) id = exported;
-            // 3. Встроенный индекс.
-            id ??= index.Match(e.Key, e.Name, e.Publisher, e.Version)?.Id;
+            // Правило со ссылкой, но без пакета, — решение «ставить вручную с сайта»: индекс не угадывает
+            // (для Office он мог бы подсунуть корпоративный Microsoft 365).
+            bool manualByRule = rule is not null && rule.Id is null && (rule.Url is not null || rule.Download is not null);
+            if (!manualByRule)
+            {
+                // 2. Экспорт winget со старого ПК (если winget там был) — самый точный источник.
+                if (id is null && wingetExport is not null && wingetExport.TryGetValue(e.Name, out var exported)) id = exported;
+                // 3. Встроенный индекс.
+                id ??= index.Match(e.Key, e.Name, e.Publisher, e.Version)?.Id;
+            }
 
             bool off = !string.IsNullOrEmpty(e.InstallLocation) && Path.IsPathRooted(e.InstallLocation)
                        && !paths.OnSystemDrive(e.InstallLocation);

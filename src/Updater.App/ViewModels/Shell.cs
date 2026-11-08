@@ -42,6 +42,16 @@ public sealed class Shell : Observable
 
     public void GoHome() => Go(new HomeVM(this), "");
 
+    private SelfUpdater.Release? _pendingUpdate;
+    /// <summary>Вышла новая версия. Если человек уже ушёл с главного экрана, не дёргаем — там будет ссылка «обновить».</summary>
+    public SelfUpdater.Release? PendingUpdate
+    {
+        get => _pendingUpdate;
+        set { if (Set(ref _pendingUpdate, value)) Raise(nameof(HasUpdate), nameof(UpdateLinkText)); }
+    }
+    public bool HasUpdate => PendingUpdate is not null;
+    public string UpdateLinkText => PendingUpdate is { } r ? $"Вышла версия {r.Version.ToString(3)} — обновить" : "";
+
     /// <summary>Автопроверка: вопросов не задаём, отвечаем «да» и пишем вопрос в журнал.</summary>
     public bool Auto { get; set; }
 

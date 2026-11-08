@@ -88,10 +88,14 @@ sealed class Checks(bool live)
         Catalogs();
         Index();
         Inventory();
+        MainstreamPrograms();
+        OnlyWhatWasThere();
         WingetCodes();
+        await SelfUpdateAsync();
         await SettingsSandboxAsync();
         await EndToEndAsync();
         if (live) await LiveScanAsync();
+        if (live) await LiveUpdateAsync();
     }
 
     // ───────────────────────────── Мелочи ─────────────────────────────
@@ -191,7 +195,7 @@ sealed class Checks(bool live)
         var inst = InstallerCatalog.Shared.Installers;
         var instBad = inst.Where(i => !WingetIndex.Shared.Contains(i.Id) || !i.Url.StartsWith("https://") || i.Type is not ("exe" or "msi")).Select(i => i.Id).ToList();
         Check(inst.Count > 0 && instBad.Count == 0, $"установщики: {inst.Count} шт., все с winget-Id и https", string.Join(", ", instBad));
-        Check(inst.Any(i => i.Bootstrap) && inst.All(i => i.FileName().EndsWith(".exe") || i.FileName().EndsWith(".msi")), "у установщиков есть имя файла и набор «первым делом»");
+        Check(inst.All(i => i.FileName().EndsWith(".exe") || i.FileName().EndsWith(".msi")), "у установщиков есть имя файла");
     }
 
     void Index()
@@ -246,6 +250,90 @@ sealed class Checks(bool live)
         Check(((Dictionary<string, object>)folders["1"])["path"] as string == @"E:\SteamLibrary", "разбор VDF");
     }
 
+    /// <summary>Популярные программы так, как они записаны в «Программах и компонентах» у обычных людей.</summary>
+    void MainstreamPrograms()
+    {
+        Title("ПОПУЛЯРНЫЕ ПРОГРАММЫ");
+        (string Key, string Name, string? Pub, string? Ver, string? Want, string? Url)[] cases =
+        [
+            ("Google Chrome", "Google Chrome", "Google LLC", "142.0.7444.60", "Google.Chrome", null),
+            ("Mozilla Firefox 145.0 (x64 ru)", "Mozilla Firefox (x64 ru)", "Mozilla", "145.0", "Mozilla.Firefox.ru", null),
+            ("Mozilla Firefox 145.0 (x64 en-US)", "Mozilla Firefox (x64 en-US)", "Mozilla", "145.0", "Mozilla.Firefox", null),
+            ("YandexBrowser", "Yandex", "ООО «ЯНДЕКС»", "25.10.1.1173", "Yandex.Browser", null),
+            ("Opera GX 123.0.5669.47", "Opera GX Stable 123.0.5669.47", "Opera Software", "123.0.5669.47", "Opera.OperaGX", null),
+            ("Opera 123.0.5669.47", "Opera Stable 123.0.5669.47", "Opera Software", "123.0.5669.47", "Opera.Opera", null),
+            ("BraveSoftware Brave-Browser", "Brave", "Brave Software Inc", "142.1.84.132", "Brave.Brave", null),
+            ("{53F49750-6209-4FBF-9CA8-7A333C87D1ED}_is1", "Telegram Desktop", "Telegram FZ-LLC", "6.2.4", "Telegram.TelegramDesktop", null),
+            ("Discord", "Discord", "Discord Inc.", "1.0.9212", "Discord.Discord", null),
+            ("Viber", "Viber", "Viber Media S.à r.l.", "26.1.0.0", "Rakuten.Viber", null),
+            ("ZoomUMX", "Zoom Workplace (64-bit)", "Zoom Communications, Inc.", "6.6.5", "Zoom.Zoom", null),
+            ("Spotify", "Spotify", "Spotify AB", "1.2.75.510", "Spotify.Spotify", null),
+            ("Яндекс Музыка", "Яндекс Музыка", "ООО «ЯНДЕКС»", "5.70.0", "Yandex.Music", null),
+            ("VLC media player", "VLC media player", "VideoLAN", "3.0.21", "VideoLAN.VLC", null),
+            ("WinRAR archiver", "WinRAR 7.13 (64-разрядная)", "win.rar GmbH", "7.13.0", "RARLab.WinRAR", null),
+            ("Notepad++", "Notepad++ (64-bit x64)", "Notepad++ Team", "8.8.7", "Notepad++.Notepad++", null),
+            ("OBS Studio", "OBS Studio", "OBS Project", "32.0.2", "OBSProject.OBSStudio", null),
+            ("{A2AF8E8A-4C80-4F5B-BB9C-3E0C2A9B7D11}", "Adobe Acrobat (64-bit)", "Adobe", "25.001.20844", "Adobe.Acrobat.Reader.64-bit", null),
+            ("Steam", "Steam", "Valve Corporation", "2.10.91.91", "Valve.Steam", null),
+            ("{A2C7B1D0-0D5E-4F2C-9E34-5B7F1A6C2D11}", "Epic Games Launcher", "Epic Games, Inc.", "1.3.149.0", "EpicGames.EpicGamesLauncher", null),
+            ("Battle.net", "Battle.net", "Blizzard Entertainment", "2.43.1", "Blizzard.BattleNet", null),
+            ("Uplay", "Ubisoft Connect", "Ubisoft", "168.2", "Ubisoft.Connect", null),
+            ("{7258BA11-600C-430E-A759-27E2C691A335}_is1", "GOG GALAXY", "GOG.com", "2.0.86", "GOG.Galaxy", null),
+            ("{0F1B6F3A-6E2C-4D3C-8D77-1A6B3D0E6C55}", "EA app", "Electronic Arts", "13.590.0.6102", "ElectronicArts.EADesktop", null),
+            ("AnyDesk", "AnyDesk", "AnyDesk Software GmbH", "9.6.2", "AnyDesk.AnyDesk", null),
+            ("TeamViewer", "TeamViewer", "TeamViewer", "15.71.4", "TeamViewer.TeamViewer", null),
+            ("O365HomePremRetail - ru-ru", "Microsoft 365 - ru-ru", "Microsoft Corporation", "16.0.19328.20190", null, "https://www.office.com/"),
+            ("ProPlus2021Retail - ru-ru", "Microsoft Office профессиональный плюс 2021 - ru-ru", "Microsoft Corporation", "16.0.19328.20190", null, "https://www.office.com/"),
+            ("uTorrent", "µTorrent", "BitTorrent Limited", "3.6.0.47206", null, "https://www.utorrent.com/"),
+            ("Punto Switcher", "Punto Switcher 4.5.0", "Yandex", "4.5.0.583", null, "https://yandex.ru/soft/punto/"),
+        ];
+        var sb = PathResolver.Sandbox(@"C:\sb");
+        foreach (var c in cases)
+        {
+            var list = ProgramInventory.Build([new(c.Key, c.Name, c.Pub, c.Ver, null, null, false)], WingetIndex.Shared, sb, ProgramCatalog.Shared);
+            var p = list.SingleOrDefault();
+            bool ok = p is not null && string.Equals(p.WingetId, c.Want, StringComparison.OrdinalIgnoreCase) && (c.Url is null || p.Url == c.Url);
+            Check(ok, $"{c.Name} → {c.Want ?? c.Url}", p is null ? "пропущено" : $"{p.WingetId ?? "—"}, {p.Url ?? "—"}");
+        }
+        // Компоненты Office не должны стать отдельными строками.
+        var parts = ProgramInventory.Build([new("x", "Microsoft Office Proofing Tools 2016 - Russian", "Microsoft Corporation", "16.0", null, null, false)],
+            WingetIndex.Shared, sb, ProgramCatalog.Shared);
+        Check(parts.Count == 0, "компоненты Office не попадают в список");
+    }
+
+    /// <summary>На новой винде ставится то, что было на старой: нет Steam — нет и Steam; библиотеки — только бывшие.</summary>
+    void OnlyWhatWasThere()
+    {
+        Title("НА НОВОЙ ВИНДЕ — ТОЛЬКО ТО, ЧТО БЫЛО");
+        var root = Path.Combine(Path.GetTempPath(), "updater-only-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(root);
+        try
+        {
+            var m = new PackageManifest();
+            m.Programs.Add(new ProgramRecord { Name = "Google Chrome", WingetId = "Google.Chrome", Source = "winget" });
+            m.Programs.Add(new ProgramRecord { Name = "Telegram Desktop", WingetId = "Telegram.TelegramDesktop", Source = "winget" });
+            m.Programs.Add(new ProgramRecord { Name = "Microsoft Visual C++ 2015-2022 Redistributable (x64)", WingetId = "Microsoft.VCRedist.2015+.x64", IsRuntime = true });
+            var plan = RestorePlan.Build(m, root, PathResolver.Sandbox(Path.Combine(root, "new")));
+            var picked = RestorePlan.SelectedPrograms(plan).Select(c => c.Id).OrderBy(x => x).ToList();
+            Check(picked.SequenceEqual(new[] { "Google.Chrome", "Microsoft.VCRedist.2015+.x64", "Telegram.TelegramDesktop" }),
+                "ставятся Chrome, Telegram и одна бывшая библиотека", string.Join(", ", picked));
+            var popular = plan.First(i => i.Id == RestorePlan.PopularId);
+            Check(popular.Children.Any(c => c.Id == "Valve.Steam" && !c.Selected), "Steam не было — он только предлагается, не отмечен");
+            Check(!popular.Children.Any(c => c.Id == "Google.Chrome"), "в «популярных» нет того, что и так встанет");
+            var runtimes = plan.First(i => i.Id == RestorePlan.RuntimesId);
+            Check(runtimes.Children.Count(c => c.Selected) == 1 && runtimes.Children.Any(c => !c.Selected && c.Chip == "по желанию"),
+                "из набора библиотек отмечена только бывшая, остальные — по желанию", runtimes.SizeOverride);
+
+            // Пустая старая винда — на новой ничего не ставится само.
+            var empty = RestorePlan.Build(new PackageManifest(), root, PathResolver.Sandbox(Path.Combine(root, "new")));
+            Check(RestorePlan.SelectedPrograms(empty).Count == 0, "без программ на старом ПК ничего не ставится без спроса");
+        }
+        finally
+        {
+            try { Directory.Delete(root, true); } catch { }
+        }
+    }
+
     void WingetCodes()
     {
         Title("ОТВЕТЫ WINGET");
@@ -278,6 +366,111 @@ sealed class Checks(bool live)
         {
             try { Directory.Delete(tmp, true); } catch { }
         }
+    }
+
+    // ───────────────────────────── Самообновление ─────────────────────────────
+
+    async Task SelfUpdateAsync()
+    {
+        Title("САМООБНОВЛЕНИЕ");
+        Check(SelfUpdater.ParseVersion("v1.2.3") == new Version(1, 2, 3) && SelfUpdater.ParseVersion("1.2") == new Version(1, 2, 0), "версия из тега");
+        Check(SelfUpdater.ParseVersion("v1.2.3-beta") is null && SelfUpdater.ParseVersion("latest") is null && SelfUpdater.ParseVersion(null) is null, "тег-мусор и предвыпуск не версия");
+        Check(SelfUpdater.IsNewer(new(1, 1, 0), new(1, 0, 0)) && !SelfUpdater.IsNewer(new(1, 0, 0), new(1, 0, 0)) && !SelfUpdater.IsNewer(new(1, 0, 0), new(1, 1, 0))
+              && !SelfUpdater.IsNewer(new(1, 0, 0, 7), new(1, 0, 0)) && SelfUpdater.IsNewer(new(1, 10, 0), new(1, 9, 0)), "сравнение версий (1.10 новее 1.9)");
+        Check(SelfUpdater.Current >= new Version(1, 0, 0), $"своя версия: {SelfUpdater.Current.ToString(3)}");
+
+        const string P = SelfUpdater.DownloadPrefix;
+        string Json(string tag = "v1.1.0", bool pre = false, bool draft = false, string exeUrl = P + "v1.1.0/Updater.exe", bool sum = true, long size = 62_000_000) =>
+            $$"""
+            {"tag_name":"{{tag}}","prerelease":{{(pre ? "true" : "false")}},"draft":{{(draft ? "true" : "false")}},
+             "html_url":"https://github.com/HumsteRD/Updater/releases/tag/{{tag}}","body":"- Пункт\n## What's Changed",
+             "assets":[{"name":"Updater.exe","size":{{size}},"browser_download_url":"{{exeUrl}}"}
+                       {{(sum ? $",{{\"name\":\"Updater.exe.sha256\",\"size\":80,\"browser_download_url\":\"{P}{tag}/Updater.exe.sha256\"}}" : "")}}]}
+            """;
+        SelfUpdater.Release? R(string json) { using var d = System.Text.Json.JsonDocument.Parse(json); return SelfUpdater.Parse(d.RootElement); }
+        var ok = R(Json());
+        Check(ok is { Tag: "v1.1.0", ExeSize: 62_000_000 } && ok.Version == new Version(1, 1, 0) && ok.ExeUrl.StartsWith(P) && ok.ChecksumUrl.EndsWith(".sha256"),
+            "выпуск с GitHub разобран", ok is null ? "null" : $"{ok.Version} {ok.ExeUrl}");
+        Check(R(Json(exeUrl: "https://evil.example.com/Updater.exe")) is null, "чужая ссылка на exe отброшена");
+        Check(R(Json(exeUrl: P + "v1.1.0/../../x/Updater.exe")) is null, "ссылка с «..» отброшена");
+        Check(R(Json(exeUrl: "https://github.com/someone/Updater/releases/download/v1.1.0/Updater.exe")) is null, "exe из чужого репозитория отброшен");
+        Check(R(Json(pre: true)) is null && R(Json(draft: true)) is null, "предвыпуск и черновик пропускаются");
+        Check(R(Json(sum: false)) is null, "без контрольной суммы не обновляемся");
+        Check(R(Json(size: 0)) is null && R(Json(tag: "nightly")) is null, "без размера или с непонятным тегом — нет");
+        Check(UpdateSummary(), "«Что нового» — пункты до служебной части GitHub");
+
+        const string Hex = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+        Check(SelfUpdater.ParseChecksum(Hex + "  Updater.exe\n") == Hex.ToUpperInvariant() && SelfUpdater.ParseChecksum(Hex) is not null, "контрольная сумма читается");
+        Check(SelfUpdater.ParseChecksum("xyz") is null && SelfUpdater.ParseChecksum(Hex[..63] + "g") is null && SelfUpdater.ParseChecksum(Hex + "ff") is null, "битая контрольная сумма — нет");
+
+        var tmp = Path.Combine(Path.GetTempPath(), "updater-self-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(tmp);
+        try
+        {
+            var exe = Path.Combine(tmp, "Updater.exe");
+            var dl = exe + SelfUpdater.DownloadSuffix;
+            File.WriteAllText(exe, "old");
+            File.WriteAllText(dl, "new");
+            var sha = SelfUpdater.Sha256(dl);
+            Check(SelfUpdater.VerifyChecksum(dl, sha) && !SelfUpdater.VerifyChecksum(exe, sha), "сверка SHA-256");
+            Check(SelfUpdater.Verify(dl, 3, sha, new(1, 1, 0)) == "В скачанном файле не та программа или не та версия", "не-exe с верной суммой всё равно не принимается");
+            Check(SelfUpdater.Verify(dl, 99, sha, new(1, 1, 0))!.StartsWith("Скачалось не целиком"), "недокачанный файл не принимается");
+            var cmd = Path.Combine(Environment.SystemDirectory, "cmd.exe");
+            Check(!SelfUpdater.VerifyBinary(cmd, new(1, 0, 0)), "чужой exe (не Updater) не принимается");
+            // Самопроверка собрана с теми же сведениями о продукте, что и Updater.exe, — на ней видно сверку версии внутри файла.
+            var self = Environment.ProcessPath!;
+            var cur = SelfUpdater.Current;
+            Check(SelfUpdater.VerifyBinary(self, cur) && !SelfUpdater.VerifyBinary(self, new(cur.Major, cur.Minor + 1, 0)),
+                "версия внутри exe: своя принимается, старше заявленной — нет", Path.GetFileName(self));
+            Check(SelfUpdater.CanWriteNextTo(exe) && Directory.GetFiles(tmp).Length == 2, "проверка записи не оставляет следов");
+
+            SelfUpdater.Apply(exe, dl);
+            Check(File.ReadAllText(exe) == "new" && File.ReadAllText(exe + SelfUpdater.OldSuffix) == "old" && !File.Exists(dl), "замена: новый на месте, прежний — .old");
+
+            // Прежний .old занят (не закрылась старая копия) — замена всё равно проходит под другим именем.
+            File.WriteAllText(dl, "newer");
+            using (new FileStream(exe + SelfUpdater.OldSuffix, FileMode.Open, FileAccess.Read, FileShare.Read))
+                SelfUpdater.Apply(exe, dl);
+            Check(File.ReadAllText(exe) == "newer" && Directory.GetFiles(tmp, "Updater.exe.*.old").Length == 1, "занятый .old не мешает замене");
+
+            // Нет скачанного файла — ничего не трогаем.
+            bool threw = false;
+            try { SelfUpdater.Apply(exe, dl); } catch (UpdateException) { threw = true; }
+            Check(threw && File.ReadAllText(exe) == "newer", "без скачанного файла exe не тронут");
+
+            // Второй шаг замены не удался (скачанный файл занят) — откат.
+            File.WriteAllText(dl, "locked");
+            threw = false;
+            using (new FileStream(dl, FileMode.Open, FileAccess.Read, FileShare.None))
+                try { SelfUpdater.Apply(exe, dl); } catch (UpdateException) { threw = true; }
+            Check(threw && File.ReadAllText(exe) == "newer", "сбой замены — прежний exe вернулся на место");
+
+            File.WriteAllText(dl + FileCopier.TempSuffix, "partial");
+            await SelfUpdater.CleanupLeftoversAsync(exe, attempts: 2);
+            var left = Directory.GetFiles(tmp).Select(Path.GetFileName).ToList();
+            Check(left.SequenceEqual(["Updater.exe"]), "хвосты обновления убраны", string.Join(", ", left));
+        }
+        catch (Exception ex)
+        {
+            Check(false, "проверка замены упала", ex.Message);
+        }
+        finally
+        {
+            try { Directory.Delete(tmp, true); } catch { }
+        }
+    }
+
+    static bool UpdateSummary()
+    {
+        var s = SelfUpdater.SummarizeNotes("Что нового:\n- Пункт **один**\n* Пункт `два`\n- Ссылка https://x\n## What's Changed\n* fix by @a in https://github.com/x");
+        return s == "•  Пункт один\n•  Пункт два";
+    }
+
+    async Task LiveUpdateAsync()
+    {
+        Title("ОБНОВЛЕНИЯ НА GITHUB (сеть)");
+        var (r, err) = await SelfUpdater.GetLatestAsync();
+        Check(r is not null && r.Version >= new Version(1, 0, 0), r is null ? "последний выпуск не получен" : $"последний выпуск: {r.Tag}, {Fmt.Size(r.ExeSize)}", err ?? r?.ExeUrl);
     }
 
     // ───────────────────────────── Настройки Windows в песочнице реестра ─────────────────────────────

@@ -33,7 +33,18 @@ public sealed class HomeVM(Shell shell) : Observable
         && WindowsInstallDate() is { } installed && installed < m.Created.ToUniversalTime();
 
     public string SystemLine =>
-        $"{shell.WindowsName} · {shell.UserName} · {(shell.IsAdmin ? "права администратора есть" : "без прав администратора")}";
+        $"{Package.AppName} {SelfUpdater.Current.ToString(3)} · {shell.WindowsName} · {shell.UserName} · {(shell.IsAdmin ? "права администратора есть" : "без прав администратора")}";
+
+    /// <summary>Только что обновились — коротко говорим об этом.</summary>
+    public string UpdatedText => App.Value("--updated-from") is { } from && SelfUpdater.ParseVersion(from) is { } v && SelfUpdater.IsNewer(SelfUpdater.Current, v)
+        ? $"Обновлено: {v.ToString(3)} → {SelfUpdater.Current.ToString(3)}"
+        : "";
+
+    public ICommand StartUpdate => new RelayCommand(() =>
+    {
+        if (shell.PendingUpdate is { } r && Collector.SingleFileExe() is { } exe)
+            shell.Go(UpdateVM.Create(shell, r, exe), "Обновление");
+    });
 
     public bool ShowElevate => !shell.IsAdmin && shell.CanElevate;
 

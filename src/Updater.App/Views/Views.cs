@@ -11,6 +11,7 @@ public partial class CollectDoneView : UserControl { public CollectDoneView() =>
 public partial class RestoreView : UserControl { public RestoreView() => InitializeComponent(); }
 public partial class RestoreJobView : UserControl { public RestoreJobView() => InitializeComponent(); }
 public partial class RestoreDoneView : UserControl { public RestoreDoneView() => InitializeComponent(); }
+public partial class UpdateView : UserControl { public UpdateView() => InitializeComponent(); }
 
 public sealed class Invert : IValueConverter
 {

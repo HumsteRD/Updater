@@ -499,18 +499,15 @@ public sealed class Scanner(PathResolver paths, Journal log)
                    "интернета (пока не встали сетевые драйверы) или без winget. Нужен интернет сейчас; загрузки большие.",
         };
 
-        foreach (var def in InstallerCatalog.Shared.Installers)
+        // Только для программ, которые у человека действительно стоят: нет Steam — нет и установщика Steam.
+        foreach (var def in InstallerCatalog.Shared.Installers.Where(d => installed.Contains(d.Id)))
         {
-            bool has = installed.Contains(def.Id);
-            // Установленные программы и «первым делом» (браузер, Steam, библиотеки) — остальное незачем.
-            if (!has && !def.Bootstrap) continue;
             item.Children.Add(new SubItem
             {
                 Id = def.Id,
                 Title = def.Name,
-                Detail = has ? "установлена" : "на всякий случай",
                 Chip = def.Type == "msi" ? "MSI" : null,
-                Selected = has,
+                Selected = true,
                 Tag = def,
             });
         }

@@ -87,6 +87,9 @@ public partial class App : Application
             window.ShowInTaskbar = false;
         }
         window.Show();
+        // Проверка обновлений — фоном, окно уже открыто. Не в служебных режимах и не в отладочной сборке.
+        if (Value("--auto-restore") is null && sandboxRoot is null && !Has("--no-update") && Collector.SingleFileExe() is { } selfExe)
+            _ = CheckForUpdateAsync(shell, selfExe);
         if (Value("--auto-restore") is { } results)
         {
             try { await AutoTest.RunAsync(window, shell, results); }
@@ -126,6 +129,69 @@ public partial class App : Application
         {
             return false;
         }
+    }
+
+    /// <summary>
+    /// Есть выпуск новее — сразу открываем экран обновления, если человек ещё на главном экране.
+    /// Если он уже начал сборы или распаковку, не мешаем: на главном останется ссылка «обновить».
+    /// </summary>
+    private static async Task CheckForUpdateAsync(Shell shell, string exe)
+    {
+        try
+        {
+            await SelfUpdater.CleanupLeftoversAsync(exe);
+            if (!SelfUpdater.CanWriteNextTo(exe))
+            {
+                shell.Log.Info("Обновления: папка программы только для чтения — проверку пропускаю");
+                return;
+            }
+            var (release, error) = await SelfUpdater.GetLatestAsync();
+            if (release is null)
+            {
+                shell.Log.Info("Обновления: " + error);
+                return;
+            }
+            if (!SelfUpdater.IsNewer(release.Version, SelfUpdater.Current)) return;
+            shell.Log.Info($"Обновления: вышла версия {release.Version.ToString(3)}");
+            shell.PendingUpdate = release;
+            if (shell.Page is HomeVM && shell.Dialog is null)
+                shell.Go(UpdateVM.Create(shell, release, exe), "Обновление");
+        }
+        catch (Exception ex)
+        {
+            shell.Log.Info("Обновления: " + ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Запуск новой версии с теми же параметрами. Права администратора наследуются; если их не дали,
+    /// новая копия не спросит второй раз.
+    /// </summary>
+    public static bool RestartAfterUpdate(string exe)
+    {
+        var args = new List<string>();
+        for (int i = 0; i < Args.Length; i++)
+        {
+            if (Args[i].Equals("--updated-from", StringComparison.OrdinalIgnoreCase)) { i++; continue; }
+            args.Add(Args[i]);
+        }
+        args.Add("--updated-from");
+        args.Add(SelfUpdater.Current.ToString(3));
+        if (!Native.IsAdmin() && !args.Contains("--no-elevate", StringComparer.OrdinalIgnoreCase)) args.Add("--no-elevate");
+        try
+        {
+            Process.Start(new ProcessStartInfo(exe, string.Join(" ", args.Select(Quote)))
+            {
+                UseShellExecute = false,
+                WorkingDirectory = Path.GetDirectoryName(exe) ?? Shell.ExeDirectory,
+            });
+        }
+        catch
+        {
+            return false;
+        }
+        Current.Shutdown();
+        return true;
     }
 
     private static string Quote(string a) => a.Contains(' ') || a.Contains('"') ? "\"" + a.Replace("\"", "\\\"") + "\"" : a;

@@ -22,8 +22,6 @@ public sealed class InstallerDef
     public string Type { get; set; } = "exe";
     /// <summary>Аргументы тихой установки; пусто — установщик откроется с вопросами.</summary>
     public string? Silent { get; set; }
-    /// <summary>Из набора «первым делом» (браузер, клиент игр) — предлагается скачать даже без установленной программы.</summary>
-    public bool Bootstrap { get; set; }
 
     public string FileName(string? stemOverride = null) => Fmt.SafeName(stemOverride ?? Name) + "." + (Type == "msi" ? "msi" : "exe");
 }

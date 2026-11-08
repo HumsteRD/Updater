@@ -148,7 +148,15 @@
             <DockPanel Grid.Row="4" Margin="0,26,0,0">
                 <Button DockPanel.Dock="Right" Style="{StaticResource ButtonLink}" Content="Перезапустить с правами администратора"
                         Command="{Binding Elevate}" Visibility="{Binding ShowElevate, Converter={StaticResource Vis}}"/>
-                <TextBlock Text="{Binding SystemLine}" Style="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                <Button DockPanel.Dock="Right" Style="{StaticResource ButtonLink}" Content="{Binding Shell.UpdateLinkText}" Margin="0,0,20,0"
+                        Command="{Binding StartUpdate}" Visibility="{Binding Shell.HasUpdate, Converter={StaticResource Vis}}"/>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border CornerRadius="6" Padding="9,3" Margin="0,0,12,0" Background="{StaticResource SuccessDim}"
+                            Visibility="{Binding UpdatedText, Converter={StaticResource NotEmpty}}">
+                        <TextBlock Text="{Binding UpdatedText}" Foreground="{StaticResource Success}" FontSize="12"/>
+                    </Border>
+                    <TextBlock Text="{Binding SystemLine}" Style="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                </StackPanel>
             </DockPanel>
         </Grid>
     </ScrollViewer>

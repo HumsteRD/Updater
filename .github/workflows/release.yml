@@ -1,7 +1,8 @@
 # Выпуск версии: тег vX.Y.Z → проверки, сборка Updater.exe и релиз в Releases.
-#   git tag v1.0.1 && git push origin v1.0.1
+#   git tag v1.1.1 && git push origin v1.1.1
 #
-# Версия программы берётся из тега, поэтому Directory.Build.props перед выпуском править не нужно.
+# Версия программы берётся из тега (Directory.Build.props — только для локальной сборки).
+# К exe прикладывается Updater.exe.sha256: без него уже выпущенные копии не станут обновляться.
 name: Выпуск
 
 on:
@@ -36,12 +37,21 @@ jobs:
           $version = "${{ github.ref_name }}".TrimStart("v")
           dotnet publish src/Updater.App/Updater.App.csproj -c Release -o publish -nologo -p:Version=$version
           if ($LASTEXITCODE -or -not (Test-Path publish/Updater.exe)) { throw "Updater.exe не собрался" }
-          "Updater.exe: {0:N1} МБ" -f ((Get-Item publish/Updater.exe).Length / 1MB)
+          $fv = (Get-Item publish/Updater.exe).VersionInfo
+          if ($fv.ProductName -ne "Updater" -or "$($fv.FileMajorPart).$($fv.FileMinorPart).$($fv.FileBuildPart)" -ne $version) {
+            throw "Внутри Updater.exe версия $($fv.FileVersion), а тег $version — программа сама не обновится"
+          }
+          # Контрольная сумма: по ней программа проверяет скачанное обновление перед заменой себя.
+          $hash = (Get-FileHash publish/Updater.exe -Algorithm SHA256).Hash
+          [IO.File]::WriteAllText("$PWD/publish/Updater.exe.sha256", "$hash  Updater.exe`n")
+          "Updater.exe: {0:N1} МБ, SHA-256 {1}" -f ((Get-Item publish/Updater.exe).Length / 1MB), $hash
 
       - name: Релиз
         uses: softprops/action-gh-release@v2
         with:
-          files: publish/Updater.exe
+          files: |
+            publish/Updater.exe
+            publish/Updater.exe.sha256
           body: |
             ## Как пользоваться
             1. **На старой винде** скачайте **Updater.exe** ниже и запустите → «Начать сборы». Программа найдёт файлы,
@@ -55,4 +65,7 @@ jobs:
             Программа не подписана сертификатом — это платная услуга; исходники открыты здесь же.
 
             Один файл, устанавливать не нужно: .NET уже внутри. Нужна 64-битная Windows 10 или 11; проверено на Windows 11.
+
+            Начиная с 1.1.0 программа при запуске сама проверяет новую версию и обновляется (сверяет размер, SHA-256
+            из `Updater.exe.sha256` и версию файла). Без интернета просто работает дальше.
           generate_release_notes: true
