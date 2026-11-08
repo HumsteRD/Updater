@@ -200,8 +200,10 @@ public static class SelfUpdater
     /// <summary>
     /// Поменять файлы местами: текущий exe → «.old», скачанный → на его место. Если второй шаг не удался,
     /// возвращаем всё как было — программа не должна остаться без exe.
+    /// Свежий exe несколько секунд может держать антивирус (проверяет новый файл), поэтому каждый шаг
+    /// повторяется: attempts раз с паузой 300 мс.
     /// </summary>
-    public static void Apply(string exePath, string downloaded)
+    public static void Apply(string exePath, string downloaded, int attempts = 12)
     {
         if (!File.Exists(downloaded)) throw new UpdateException("Скачанный файл пропал");
         var old = exePath + OldSuffix;
@@ -211,16 +213,54 @@ public static class SelfUpdater
             try { File.Delete(old); }
             catch { old = $"{exePath}.{Guid.NewGuid().ToString("N")[..8]}{OldSuffix}"; }
         }
-        File.Move(exePath, old);
         try
         {
-            File.Move(downloaded, exePath);
+            MoveWithRetry(exePath, old, attempts);
         }
         catch (Exception ex)
         {
-            try { File.Move(old, exePath); } catch { }
+            throw new UpdateException("Не получилось отодвинуть текущую версию: " + ex.Message);
+        }
+        try
+        {
+            MoveWithRetry(downloaded, exePath, attempts);
+        }
+        catch (Exception ex)
+        {
+            try { MoveWithRetry(old, exePath, attempts); } catch { }
             throw new UpdateException("Не получилось заменить файл: " + ex.Message);
         }
+    }
+
+    private static void MoveWithRetry(string from, string to, int attempts)
+    {
+        for (int i = 1; ; i++)
+        {
+            try
+            {
+                File.Move(from, to);
+                return;
+            }
+            catch (Exception ex) when ((ex is IOException or UnauthorizedAccessException) && i < attempts && File.Exists(from))
+            {
+                Thread.Sleep(300);
+            }
+        }
+    }
+
+    /// <summary>Журнал обновлений: %LOCALAPPDATA%\Updater\обновления.txt — чтобы было видно, что пошло не так.</summary>
+    public static string LogPath => Path.Combine(Package.DataDir, "обновления.txt");
+
+    public static void Note(string text)
+    {
+        try
+        {
+            Directory.CreateDirectory(Package.DataDir);
+            var f = new FileInfo(LogPath);
+            if (f.Exists && f.Length > 200_000) f.Delete();
+            File.AppendAllText(LogPath, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}  {text}{Environment.NewLine}");
+        }
+        catch { }
     }
 
     /// <summary>Убрать хвосты прошлого обновления: «.old» (может быть занят, пока закрывается старая копия) и недокачанное.</summary>

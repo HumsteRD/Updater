@@ -80,11 +80,17 @@ public sealed class UpdateVM : Observable
             Tick();
             Status = "Проверил файл. Перезапускаюсь…";
             _shell.Log.Ok($"Обновление {FromVersion} → {ToVersion}: скачано и проверено");
+            SelfUpdater.Note($"{FromVersion} → {ToVersion}: скачано и проверено ({exe})");
             await Task.Delay(400);
             if (_cts.IsCancellationRequested) return;
-            SelfUpdater.Apply(exe, path);
+            // Замена может подождать, пока антивирус отпустит новый файл, — не держим окно.
+            await Task.Run(() => SelfUpdater.Apply(exe, path));
+            SelfUpdater.Note($"{FromVersion} → {ToVersion}: файл заменён, перезапуск");
             if (!App.RestartAfterUpdate(exe))
+            {
                 Error = $"Новая версия {ToVersion} уже на месте, но перезапуститься не вышло. Закрой программу и открой заново.";
+                SelfUpdater.Note($"{FromVersion} → {ToVersion}: не удалось перезапуститься");
+            }
         }
         catch (OperationCanceledException)
         {
@@ -94,6 +100,7 @@ public sealed class UpdateVM : Observable
         {
             Error = ex is UpdateException ? ex.Message : "Не получилось обновиться: " + ex.Message;
             _shell.Log.Warn("Обновление: " + Error);
+            SelfUpdater.Note($"{FromVersion} → {ToVersion}: ошибка — {Error}");
         }
         finally
         {

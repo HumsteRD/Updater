@@ -3,6 +3,7 @@
 #
 # Версия программы берётся из тега (Directory.Build.props — только для локальной сборки).
 # К exe прикладывается Updater.exe.sha256: без него уже выпущенные копии не станут обновляться.
+# Перед тегом допишите раздел «## X.Y.Z» в CHANGELOG.md — без него выпуск остановится.
 name: Выпуск
 
 on:
@@ -21,6 +22,21 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
+
+      # Сначала — описание: без раздела в CHANGELOG.md выпуск не собираем. Пункты из него программа
+      # показывает на экране обновления («Что нового»).
+      - name: Описание выпуска
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart("v")
+          $lines = Get-Content CHANGELOG.md -Encoding utf8
+          $start = -1
+          for ($i = 0; $i -lt $lines.Count; $i++) { if ($lines[$i].Trim() -eq "## $version") { $start = $i; break } }
+          if ($start -lt 0) { throw "В CHANGELOG.md нет раздела «## $version» — напишите, что нового" }
+          $section = for ($i = $start + 1; $i -lt $lines.Count -and -not $lines[$i].StartsWith("## "); $i++) { $lines[$i] }
+          $howto = Get-Content .github/release-howto.md -Raw -Encoding utf8
+          [IO.File]::WriteAllText("$PWD/notes.md", "## Что нового`n" + ($section -join "`n").Trim() + "`n`n" + $howto)
+          Get-Content notes.md -Encoding utf8 | Select-Object -First 8
 
       - name: Сборка и проверки
         shell: pwsh
@@ -52,20 +68,5 @@ jobs:
           files: |
             publish/Updater.exe
             publish/Updater.exe.sha256
-          body: |
-            ## Как пользоваться
-            1. **На старой винде** скачайте **Updater.exe** ниже и запустите → «Начать сборы». Программа найдёт файлы,
-               программы, их настройки, сохранения игр и настройки Windows. Выберите флешку или другой диск (не C:) —
-               туда лягут вещи и сама программа.
-            2. **Переустановите Windows**, не трогая диск со сборкой.
-            3. **На новой винде** запустите `Updater.exe` из папки `Updater` на флешке → «Распаковать» → «Начать переезд».
-               Драйверы, программы, файлы и настройки встанут сами.
-
-            Windows может предупредить о неизвестном издателе: «Подробнее» → «Выполнить в любом случае».
-            Программа не подписана сертификатом — это платная услуга; исходники открыты здесь же.
-
-            Один файл, устанавливать не нужно: .NET уже внутри. Нужна 64-битная Windows 10 или 11; проверено на Windows 11.
-
-            Начиная с 1.1.0 программа при запуске сама проверяет новую версию и обновляется (сверяет размер, SHA-256
-            из `Updater.exe.sha256` и версию файла). Без интернета просто работает дальше.
+          body_path: notes.md
           generate_release_notes: true

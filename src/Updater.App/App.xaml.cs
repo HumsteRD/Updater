@@ -139,6 +139,8 @@ public partial class App : Application
     {
         try
         {
+            if (Value("--updated-from") is { } from)
+                SelfUpdater.Note($"запущена {SelfUpdater.Current.ToString(3)} после обновления с {from}, права администратора: {(Native.IsAdmin() ? "есть" : "нет")}");
             await SelfUpdater.CleanupLeftoversAsync(exe);
             if (!SelfUpdater.CanWriteNextTo(exe))
             {
@@ -153,6 +155,7 @@ public partial class App : Application
             }
             if (!SelfUpdater.IsNewer(release.Version, SelfUpdater.Current)) return;
             shell.Log.Info($"Обновления: вышла версия {release.Version.ToString(3)}");
+            SelfUpdater.Note($"{SelfUpdater.Current.ToString(3)}: найдена версия {release.Version.ToString(3)} ({exe})");
             shell.PendingUpdate = release;
             if (shell.Page is HomeVM && shell.Dialog is null)
                 shell.Go(UpdateVM.Create(shell, release, exe), "Обновление");

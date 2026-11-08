@@ -398,6 +398,10 @@ sealed class Checks(bool live)
         Check(R(Json(sum: false)) is null, "без контрольной суммы не обновляемся");
         Check(R(Json(size: 0)) is null && R(Json(tag: "nightly")) is null, "без размера или с непонятным тегом — нет");
         Check(UpdateSummary(), "«Что нового» — пункты до служебной части GitHub");
+        var changelog = FindUp("CHANGELOG.md");
+        var section = changelog is null ? null : ChangelogSection(File.ReadAllText(changelog), SelfUpdater.Current.ToString(3));
+        Check(section is not null && SelfUpdater.SummarizeNotes("## Что нового\n" + section).Length > 0,
+            $"в CHANGELOG.md есть «Что нового» для {SelfUpdater.Current.ToString(3)}", changelog ?? "CHANGELOG.md не найден");
 
         const string Hex = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
         Check(SelfUpdater.ParseChecksum(Hex + "  Updater.exe\n") == Hex.ToUpperInvariant() && SelfUpdater.ParseChecksum(Hex) is not null, "контрольная сумма читается");
@@ -442,8 +446,16 @@ sealed class Checks(bool live)
             File.WriteAllText(dl, "locked");
             threw = false;
             using (new FileStream(dl, FileMode.Open, FileAccess.Read, FileShare.None))
-                try { SelfUpdater.Apply(exe, dl); } catch (UpdateException) { threw = true; }
+                try { SelfUpdater.Apply(exe, dl, attempts: 2); } catch (UpdateException) { threw = true; }
             Check(threw && File.ReadAllText(exe) == "newer", "сбой замены — прежний exe вернулся на место");
+
+            // Антивирус держит новый файл пару секунд — замена дожидается и проходит.
+            var av = new FileStream(dl, FileMode.Open, FileAccess.Read, FileShare.None);
+            var release = Task.Run(async () => { await Task.Delay(700); av.Dispose(); });
+            var swAv = Stopwatch.StartNew();
+            SelfUpdater.Apply(exe, dl);
+            await release;
+            Check(File.ReadAllText(exe) == "locked" && swAv.ElapsedMilliseconds >= 500, "занятый антивирусом файл: замена подождала и прошла", $"{swAv.ElapsedMilliseconds} мс");
 
             File.WriteAllText(dl + FileCopier.TempSuffix, "partial");
             await SelfUpdater.CleanupLeftoversAsync(exe, attempts: 2);
@@ -458,6 +470,23 @@ sealed class Checks(bool live)
         {
             try { Directory.Delete(tmp, true); } catch { }
         }
+    }
+
+    static string? FindUp(string name)
+    {
+        for (var d = new DirectoryInfo(AppContext.BaseDirectory); d is not null; d = d.Parent)
+            if (File.Exists(Path.Combine(d.FullName, name))) return Path.Combine(d.FullName, name);
+        return null;
+    }
+
+    /// <summary>Раздел «## 1.2.3» из CHANGELOG.md — тот же разбор, что в выпуске на GitHub.</summary>
+    static string? ChangelogSection(string text, string version)
+    {
+        var lines = text.Replace("\r", "").Split('\n');
+        int start = Array.FindIndex(lines, l => l.Trim() == "## " + version);
+        if (start < 0) return null;
+        var body = lines.Skip(start + 1).TakeWhile(l => !l.StartsWith("## ")).ToList();
+        return body.Any(l => l.TrimStart().StartsWith("- ")) ? string.Join("\n", body).Trim() : null;
     }
 
     static bool UpdateSummary()
