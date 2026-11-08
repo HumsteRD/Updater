@@ -4,6 +4,13 @@
 На старой винде собирает всё нужное на флешку или другой диск — вместе с собой, — а на новой
 возвращает всё на место.
 
+**[⬇ Скачать Updater.exe](https://github.com/HumsteRD/Updater/releases/latest/download/Updater.exe)** ·
+[все версии](https://github.com/HumsteRD/Updater/releases)
+
+Один файл, устанавливать не нужно: .NET уже внутри. Нужна 64-битная Windows 10 или 11.
+Windows может предупредить о неизвестном издателе: «Подробнее» → «Выполнить в любом случае» —
+программа не подписана сертификатом (это платно), исходники открыты здесь же.
+
 ## Как пользоваться
 
 1. **Старая винда:** запусти `Updater.exe` → «Начать сборы». Программа сама найдёт папки,
@@ -46,7 +53,7 @@
 
 ## Разработка
 
-Нужен .NET 9 SDK (подойдёт локальный из VELOCITY: `D:\Projects\Velocity\.tools\dotnet\dotnet.exe`).
+Нужен .NET 9 SDK.
 
 ```bash
 dotnet build Updater.sln
@@ -62,6 +69,16 @@ dotnet publish src/Updater.App -c Release -o publish      # один Updater.exe
 
 Самопроверка пишет только во временную папку и в ветку реестра `HKCU\Software\Updater.SelfCheck`,
 которую удаляет; настоящие настройки только читает.
+
+### Выпуск версии
+
+```bash
+git tag v1.0.1 && git push origin v1.0.1
+```
+
+GitHub Actions (`.github/workflows/release.yml`) соберёт решение, прогонит самопроверку, соберёт
+`Updater.exe` с версией из тега и выложит его в Releases. Если самопроверка найдёт ошибки, выпуск
+остановится.
 
 ### Проверка распаковки на чистой Windows
 
