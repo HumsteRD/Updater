@@ -1,0 +1,117 @@
+{
+  // Ручные правила поверх индекса winget: что пропускать, где индекс ошибается,
+  // какие программы качать напрямую (их нет в winget).
+  "rules": [
+    { "match": "^FI$", "name": "FI — Free Internet", "download": "https://github.com/HumsteRD/FreeInternet/releases/latest/download/fi-setup.exe", "note": "Обход блокировок: если без него не открываются YouTube и Discord, поставь его первым" },
+    { "match": "^AyuGram", "id": "RadolynLabs.AyuGramDesktop" },
+    { "match": "^Microsoft Visual Studio Code", "id": "Microsoft.VisualStudioCode" },
+    { "match": "^NVIDIA App", "url": "https://www.nvidia.com/ru-ru/software/nvidia-app/" },
+    { "match": "^GitHub Copilot CLI", "id": "GitHub.Copilot" },
+    { "match": "^Steam$", "id": "Valve.Steam" },
+    { "match": "^Bonjour$", "skip": true },
+    { "match": "^Microsoft \\.NET SDK", "skip": true },
+    { "match": "^Dota 2 Mod Manager", "skip": true }
+  ],
+
+  // Готовые подборки для новой винды: можно добавить к тому, что было на старой.
+  "popular": [
+    {
+      "group": "Браузеры",
+      "items": [
+        { "id": "Google.Chrome", "name": "Google Chrome" },
+        { "id": "Yandex.Browser", "name": "Яндекс Браузер" },
+        { "id": "Mozilla.Firefox", "name": "Firefox" },
+        { "id": "Brave.Brave", "name": "Brave" },
+        { "id": "Opera.OperaGX", "name": "Opera GX" },
+        { "id": "Vivaldi.Vivaldi", "name": "Vivaldi" }
+      ]
+    },
+    {
+      "group": "Общение",
+      "items": [
+        { "id": "Telegram.TelegramDesktop", "name": "Telegram" },
+        { "id": "RadolynLabs.AyuGramDesktop", "name": "AyuGram" },
+        { "id": "Discord.Discord", "name": "Discord" },
+        { "id": "Rakuten.Viber", "name": "Viber" },
+        { "id": "Zoom.Zoom", "name": "Zoom" }
+      ]
+    },
+    {
+      "group": "Игры",
+      "items": [
+        { "id": "Valve.Steam", "name": "Steam" },
+        { "id": "EpicGames.EpicGamesLauncher", "name": "Epic Games" },
+        { "id": "Blizzard.BattleNet", "name": "Battle.net" },
+        { "id": "ElectronicArts.EADesktop", "name": "EA app" },
+        { "id": "Ubisoft.Connect", "name": "Ubisoft Connect" },
+        { "id": "GOG.Galaxy", "name": "GOG Galaxy" },
+        { "id": "Mojang.MinecraftLauncher", "name": "Minecraft Launcher" }
+      ]
+    },
+    {
+      "group": "Видео и музыка",
+      "items": [
+        { "id": "VideoLAN.VLC", "name": "VLC" },
+        { "id": "CodecGuide.K-LiteCodecPack.Standard", "name": "K-Lite Codec Pack" },
+        { "id": "OBSProject.OBSStudio", "name": "OBS Studio" },
+        { "id": "Spotify.Spotify", "name": "Spotify" },
+        { "id": "Yandex.Music", "name": "Яндекс Музыка" },
+        { "id": "AIMP.AIMP", "name": "AIMP" },
+        { "id": "Audacity.Audacity", "name": "Audacity" },
+        { "id": "HandBrake.HandBrake", "name": "HandBrake" }
+      ]
+    },
+    {
+      "group": "Полезное",
+      "items": [
+        { "id": "7zip.7zip", "name": "7-Zip" },
+        { "id": "RARLab.WinRAR", "name": "WinRAR" },
+        { "id": "voidtools.Everything", "name": "Everything — мгновенный поиск файлов" },
+        { "id": "Microsoft.PowerToys", "name": "PowerToys" },
+        { "id": "ShareX.ShareX", "name": "ShareX — скриншоты" },
+        { "id": "qBittorrent.qBittorrent", "name": "qBittorrent" },
+        { "id": "Notepad++.Notepad++", "name": "Notepad++" },
+        { "id": "AntibodySoftware.WizTree", "name": "WizTree — что занимает место" },
+        { "id": "TeamViewer.TeamViewer", "name": "TeamViewer" }
+      ]
+    },
+    {
+      "group": "Железо",
+      "items": [
+        { "id": "Guru3D.Afterburner", "name": "MSI Afterburner" },
+        { "id": "REALiX.HWiNFO", "name": "HWiNFO" },
+        { "id": "CPUID.CPU-Z", "name": "CPU-Z" },
+        { "id": "TechPowerUp.GPU-Z", "name": "GPU-Z" },
+        { "id": "CrystalDewWorld.CrystalDiskInfo", "name": "CrystalDiskInfo" },
+        { "id": "Logitech.GHUB", "name": "Logitech G HUB" },
+        { "id": "SteelSeries.GG", "name": "SteelSeries GG" }
+      ]
+    },
+    {
+      "group": "Разработка",
+      "items": [
+        { "id": "Microsoft.VisualStudioCode", "name": "Visual Studio Code" },
+        { "id": "Git.Git", "name": "Git" },
+        { "id": "Python.Python.3.13", "name": "Python 3.13" },
+        { "id": "OpenJS.NodeJS.LTS", "name": "Node.js LTS" },
+        { "id": "Microsoft.WindowsTerminal", "name": "Windows Terminal" },
+        { "id": "Docker.DockerDesktop", "name": "Docker Desktop" }
+      ]
+    }
+  ],
+
+  // Пакет «чтобы всё запускалось»: без этих библиотек часть игр и программ падает с ошибкой про DLL.
+  "runtimes": {
+    "title": "Библиотеки для игр и программ",
+    "note": "Visual C++ всех лет, DirectX, .NET и XNA — без них часть игр не запускается с ошибкой про DLL.",
+    "items": [
+      "Microsoft.VCRedist.2015+.x64", "Microsoft.VCRedist.2015+.x86",
+      "Microsoft.VCRedist.2013.x64", "Microsoft.VCRedist.2013.x86",
+      "Microsoft.VCRedist.2012.x64", "Microsoft.VCRedist.2012.x86",
+      "Microsoft.VCRedist.2010.x64", "Microsoft.VCRedist.2010.x86",
+      "Microsoft.VCRedist.2008.x64", "Microsoft.VCRedist.2008.x86",
+      "Microsoft.DirectX", "Microsoft.XNARedist",
+      "Microsoft.DotNet.DesktopRuntime.8", "Microsoft.DotNet.DesktopRuntime.9"
+    ]
+  }
+}

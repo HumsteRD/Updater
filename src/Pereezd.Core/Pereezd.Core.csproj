@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pereezd.Core</RootNamespace>
+    <AssemblyName>Pereezd.Core</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Каталоги (программы, игры, настройки Windows) — данные, а не код: правятся без перекомпиляции логики. -->
+    <EmbeddedResource Include="Catalog\*.json" LogicalName="Pereezd.Catalog.%(Filename)%(Extension)" />
+    <!-- Снимок индекса winget: сопоставляет установленные программы с пакетами даже там, где winget нет.
+         Обновляется скриптом tools/build-winget-index.py. -->
+    <EmbeddedResource Include="Catalog\*.gz" LogicalName="Pereezd.Catalog.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Management" Version="9.0.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,428 @@
+{
+  // Наборы исключений: кэши, которые программы сами скачают или пересоберут.
+  // Маска без «/» — имя на любой глубине, «/имя» — только в корне, «**/a/b» — путь.
+  "excludeSets": {
+    "chromium": [
+      "Cache", "Code Cache", "GPUCache", "DawnCache", "DawnGraphiteCache", "DawnWebGPUCache", "GrShaderCache",
+      "GraphiteDawnCache", "ShaderCache", "component_crx_cache", "extensions_crx_cache", "Crashpad", "Crash Reports",
+      "optimization_guide_model_store", "OptGuideOnDeviceModel", "OnDeviceHeadSuggestModel", "Safe Browsing",
+      "SODA", "SODALanguagePacks", "screen_ai", "WidevineCdm", "MediaFoundationWidevineCdm", "Webstore Downloads",
+      "BrowserMetrics", "*.pma", "*.tmp", "**/Service Worker/CacheStorage", "**/Service Worker/ScriptCache",
+      "VideoDecodeStats", "hyphen-data", "ZxcvbnData", "Subresource Filter", "MEIPreload", "FileTypePolicies",
+      "CertificateRevocation", "Crowd Deny", "TrustTokenKeyCommitments", "OriginTrials", "PKIMetadata",
+      "SSLErrorAssistant", "ActorSafetyLists", "AmountExtractionHeuristicRegexes", "CaptchaProviders",
+      "AutofillStates", "ClientSidePhishing", "CookieReadinessList", "FirstPartySetsPreloaded",
+      "OpenCookieDatabase", "ProbabilisticRevealTokenRegistry", "PrivacySandboxAttestationsPreloaded",
+      "RecoveryImproved", "TpcdMetadata", "WasmTtsEngine", "segmentation_platform", "Speech"
+    ],
+    "brave": [
+      // Компоненты Brave (списки блокировки и т. п.) — папки из 32 букв в корне, Brave скачает их сам.
+      "/????????????????????????????????"
+    ],
+    "firefox": [
+      "crashes", "minidumps", "Crash Reports", "datareporting", "saved-telemetry-pings", "**/storage/temporary",
+      "cache2", "startupCache", "shader-cache", "*.tmp"
+    ],
+    "telegram": [
+      "user_data", "user_data#*", "emoji", "dumps", "temp", "tdummy"
+    ]
+  },
+
+  "apps": [
+    // ───────────── Браузеры ─────────────
+    {
+      "id": "chrome", "title": "Google Chrome", "glyph": "", "group": "Браузеры",
+      "roots": [ { "path": "{LocalAppData}\\Google\\Chrome\\User Data", "excludeSet": "chromium" } ],
+      "processes": [ "chrome" ], "sensitive": true, "wingetId": "Google.Chrome",
+      "passwordsUrl": "chrome://password-manager/settings", "exe": "{ProgramFiles}\\Google\\Chrome\\Application\\chrome.exe",
+      "note": "Закладки, расширения, история, открытые вкладки и настройки переедут. Пароли и входы на сайты (куки) — нет: Chrome с 2024 года шифрует их так, что на другом компьютере они не открываются. Их вернёт только вход в аккаунт Google (синхронизация)."
+    },
+    {
+      "id": "edge", "title": "Microsoft Edge", "glyph": "", "group": "Браузеры",
+      "roots": [ { "path": "{LocalAppData}\\Microsoft\\Edge\\User Data", "excludeSet": "chromium" } ],
+      "processes": [ "msedge" ], "sensitive": true, "defaultOff": true,
+      "passwordsUrl": "edge://wallet/passwords", "exe": "{ProgramFilesX86}\\Microsoft\\Edge\\Application\\msedge.exe",
+      "note": "Закладки, расширения и история Edge. Пароли и входы на сайты (куки) на новой винде не откроются — их вернёт вход в аккаунт Microsoft. Если Edge не пользуешься — не бери, он есть в любой винде."
+    },
+    {
+      "id": "yandex", "title": "Яндекс Браузер", "glyph": "", "group": "Браузеры",
+      "roots": [ { "path": "{LocalAppData}\\Yandex\\YandexBrowser\\User Data", "excludeSet": "chromium" } ],
+      "processes": [ "browser" ], "sensitive": true, "wingetId": "Yandex.Browser",
+      "passwordsUrl": "browser://passwords",
+      "note": "Закладки, расширения, история и вкладки. Пароли и входы на сайты (куки) вернёт синхронизация с Яндекс ID — на новой винде они сами по себе не откроются."
+    },
+    {
+      "id": "brave", "title": "Brave", "glyph": "", "group": "Браузеры",
+      "roots": [ { "path": "{LocalAppData}\\BraveSoftware\\Brave-Browser\\User Data", "excludeSet": "chromium", "exclude": [ "/????????????????????????????????" ] } ],
+      "processes": [ "brave" ], "sensitive": true, "wingetId": "Brave.Brave",
+      "passwordsUrl": "brave://password-manager/settings", "exe": "{ProgramFiles}\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
+      "note": "Закладки, расширения, история и вкладки переедут. Пароли и входы на сайты (куки) — нет: как и Chrome, Brave шифрует их под конкретный компьютер. Сохрани пароли через экспорт или включи синхронизацию Brave."
+    },
+    {
+      "id": "opera", "title": "Opera", "glyph": "", "group": "Браузеры",
+      "roots": [ { "path": "{AppData}\\Opera Software\\Opera Stable", "excludeSet": "chromium" } ],
+      "processes": [ "opera" ], "sensitive": true, "wingetId": "Opera.Opera",
+      "note": "Закладки, экспресс-панель, расширения и история. Пароли — через синхронизацию Opera."
+    },
+    {
+      "id": "operagx", "title": "Opera GX", "glyph": "", "group": "Браузеры",
+      "roots": [ { "path": "{AppData}\\Opera Software\\Opera GX Stable", "excludeSet": "chromium" } ],
+      "processes": [ "opera" ], "sensitive": true, "wingetId": "Opera.OperaGX",
+      "note": "Закладки, экспресс-панель, моды и история. Пароли — через синхронизацию Opera."
+    },
+    {
+      "id": "vivaldi", "title": "Vivaldi", "glyph": "", "group": "Браузеры",
+      "roots": [ { "path": "{LocalAppData}\\Vivaldi\\User Data", "excludeSet": "chromium" } ],
+      "processes": [ "vivaldi" ], "sensitive": true, "wingetId": "Vivaldi.Vivaldi",
+      "note": "Закладки, заметки, панели и история. Пароли — через синхронизацию Vivaldi."
+    },
+    {
+      "id": "firefox", "title": "Firefox", "glyph": "", "group": "Браузеры",
+      "roots": [ { "path": "{AppData}\\Mozilla\\Firefox", "excludeSet": "firefox" } ],
+      "processes": [ "firefox" ], "sensitive": true, "wingetId": "Mozilla.Firefox",
+      "note": "У Firefox переезжает всё, и это его плюс: закладки, расширения, история, пароли и входы на сайты (куки) — если не задан основной пароль. Заново логиниться не придётся."
+    },
+
+    // ───────────── Общение ─────────────
+    {
+      "id": "telegram", "title": "Telegram", "glyph": "", "group": "Общение",
+      "roots": [ { "path": "{AppData}\\Telegram Desktop\\tdata", "excludeSet": "telegram" } ],
+      "processes": [ "Telegram" ], "sensitive": true, "wingetId": "Telegram.TelegramDesktop",
+      "note": "Вход в аккаунт сохранится — не придётся вводить код. Кэш картинок и видео не берём, Telegram скачает его сам. Эту папку никому не давай."
+    },
+    {
+      "id": "ayugram", "title": "AyuGram", "glyph": "", "group": "Общение",
+      "roots": [ { "path": "{AppData}\\AyuGram Desktop\\tdata", "excludeSet": "telegram" } ],
+      "processes": [ "AyuGram" ], "sensitive": true, "wingetId": "RadolynLabs.AyuGramDesktop",
+      "note": "Вход в аккаунт сохранится. Кэш медиа не берём. Эту папку никому не давай."
+    },
+    {
+      "id": "kotatogram", "title": "Kotatogram", "glyph": "", "group": "Общение",
+      "roots": [ { "path": "{AppData}\\Kotatogram Desktop\\tdata", "excludeSet": "telegram" } ],
+      "processes": [ "Kotatogram" ], "sensitive": true,
+      "note": "Вход в аккаунт сохранится. Кэш медиа не берём."
+    },
+    {
+      "id": "64gram", "title": "64Gram", "glyph": "", "group": "Общение",
+      "roots": [ { "path": "{AppData}\\64Gram Desktop\\tdata", "excludeSet": "telegram" } ],
+      "processes": [ "Telegram" ], "sensitive": true,
+      "note": "Вход в аккаунт сохранится. Кэш медиа не берём."
+    },
+    {
+      "id": "viber", "title": "Viber", "glyph": "", "group": "Общение",
+      "roots": [ { "path": "{AppData}\\ViberPC", "exclude": [ "**/Avatars", "**/Backgrounds", "*.log", "QtWebEngine" ] } ],
+      "processes": [ "Viber" ], "sensitive": true, "wingetId": "Rakuten.Viber",
+      "note": "История переписки на компьютере. Viber может попросить заново подтвердить вход с телефона."
+    },
+    {
+      "id": "discord", "title": "Discord", "glyph": "", "group": "Общение",
+      "roots": [ { "path": "{AppData}\\discord\\settings.json" } ],
+      "processes": [ "Discord" ], "wingetId": "Discord.Discord",
+      "note": "Настройки Discord хранятся на его серверах — после входа всё вернётся само.",
+      "reminder": "Discord: войти заново — быстрее всего по QR-коду из приложения на телефоне."
+    },
+
+    // ───────────── Игровые клиенты ─────────────
+    {
+      "id": "steam", "title": "Steam", "glyph": "", "group": "Игры",
+      "roots": [
+        { "path": "{Steam}\\config", "exclude": [ "htmlcache", "avatarcache", "*.tmp" ] },
+        { "path": "{Steam}\\userdata", "exclude": [ "**/config/htmlcache", "**/ugcmsgcache" ] },
+        { "path": "{Steam}\\steamapps\\libraryfolders.vdf" }
+      ],
+      "processes": [ "steam", "steamwebhelper" ], "wingetId": "Valve.Steam",
+      "note": "Настройки Steam, конфиги игр, скриншоты и список библиотек — игры на других дисках Steam найдёт сам.",
+      "reminder": "Steam: войти в аккаунт. Если игры на другом диске не появились — Настройки → Хранилище → добавить папку библиотеки."
+    },
+    {
+      "id": "epic", "title": "Epic Games Launcher", "glyph": "", "group": "Игры",
+      "roots": [ { "path": "{LocalAppData}\\EpicGamesLauncher\\Saved\\Config" } ],
+      "processes": [ "EpicGamesLauncher" ], "wingetId": "EpicGames.EpicGamesLauncher",
+      "reminder": "Epic Games: войти. Игры на другом диске: «Установить» → выбрать ту же папку — Epic проверит файлы и не будет качать заново."
+    },
+    {
+      "id": "battlenet", "title": "Battle.net", "glyph": "", "group": "Игры",
+      "roots": [ { "path": "{AppData}\\Battle.net", "exclude": [ "Cache", "Logs", "*.log" ] } ],
+      "processes": [ "Battle.net" ], "wingetId": "Blizzard.BattleNet",
+      "reminder": "Battle.net: войти. Игры на другом диске: «Найти» в меню установки игры."
+    },
+    {
+      "id": "minecraft", "title": "Minecraft: миры и настройки", "glyph": "", "group": "Игры", "section": "games",
+      "roots": [
+        { "path": "{AppData}\\.minecraft\\saves" },
+        { "path": "{AppData}\\.minecraft\\resourcepacks" },
+        { "path": "{AppData}\\.minecraft\\shaderpacks" },
+        { "path": "{AppData}\\.minecraft\\screenshots" },
+        { "path": "{AppData}\\.minecraft\\options.txt" },
+        { "path": "{AppData}\\.minecraft\\servers.dat" }
+      ],
+      "processes": [ "javaw" ],
+      "note": "Миры, ресурспаки, шейдеры, скриншоты, список серверов и настройки. Версии игры лаунчер скачает сам."
+    },
+
+    // ───────────── Видео, звук, стримы ─────────────
+    {
+      "id": "obs", "title": "OBS Studio", "glyph": "", "group": "Медиа",
+      "roots": [ { "path": "{AppData}\\obs-studio", "exclude": [ "logs", "crashes", "profiler_data", "updates", "**/obs-browser/Cache", "**/obs-browser/Code Cache", "**/obs-browser/GPUCache", ".sentinel" ] } ],
+      "processes": [ "obs64" ], "wingetId": "OBSProject.OBSStudio",
+      "note": "Сцены, источники, профили вывода и ключи трансляций."
+    },
+    {
+      "id": "soundpad", "title": "Soundpad", "glyph": "", "group": "Медиа",
+      "roots": [ { "path": "{AppData}\\Leppsoft", "exclude": [ "backup-*.spl" ] } ],
+      "processes": [ "Soundpad" ],
+      "note": "Список звуков и горячие клавиши. Сами звуковые файлы должны лежать там же, где были (или перенеси их с «Файлами»)."
+    },
+    {
+      "id": "aimp", "title": "AIMP", "glyph": "", "group": "Медиа",
+      "roots": [ { "path": "{AppData}\\AIMP", "exclude": [ "Cache", "Logs" ] } ],
+      "processes": [ "AIMP" ], "wingetId": "AIMP.AIMP",
+      "note": "Плейлисты, обложки, настройки и скины."
+    },
+    {
+      "id": "foobar", "title": "foobar2000", "glyph": "", "group": "Медиа",
+      "roots": [ { "path": "{AppData}\\foobar2000-v2" }, { "path": "{AppData}\\foobar2000" } ],
+      "processes": [ "foobar2000" ], "wingetId": "PeterPawlowski.foobar2000",
+      "note": "Плейлисты, библиотека, компоненты и оформление."
+    },
+    {
+      "id": "audacity", "title": "Audacity", "glyph": "", "group": "Медиа",
+      "roots": [ { "path": "{AppData}\\audacity", "exclude": [ "SessionData", "*.log" ] } ],
+      "processes": [ "Audacity" ], "wingetId": "Audacity.Audacity", "defaultOff": true,
+      "note": "Настройки, макросы и пресеты эффектов."
+    },
+
+    // ───────────── Железо ─────────────
+    {
+      "id": "afterburner", "title": "MSI Afterburner", "glyph": "", "group": "Железо",
+      "roots": [ { "path": "{ProgramFilesX86}\\MSI Afterburner\\Profiles" } ],
+      "processes": [ "MSIAfterburner" ], "wingetId": "Guru3D.Afterburner",
+      "note": "Профили разгона, кривая вентиляторов и настройки оверлея. Проверь профиль после установки драйвера видеокарты."
+    },
+    {
+      "id": "rtss", "title": "RivaTuner Statistics Server", "glyph": "", "group": "Железо",
+      "roots": [ { "path": "{ProgramFilesX86}\\RivaTuner Statistics Server\\Profiles" } ],
+      "processes": [ "RTSS" ],
+      "note": "Ограничители FPS и настройки оверлея для игр."
+    },
+    {
+      "id": "ghub", "title": "Logitech G HUB", "glyph": "", "group": "Железо",
+      "roots": [ { "path": "{LocalAppData}\\LGHUB", "exclude": [ "cache", "logs", "*.log", "depots" ] } ],
+      "processes": [ "lghub", "lghub_agent", "lghub_updater" ], "wingetId": "Logitech.GHUB",
+      "note": "Профили мыши и клавиатуры, макросы, DPI. Часть может подтянуться из аккаунта Logitech."
+    },
+
+    // ───────────── Полезные программы ─────────────
+    {
+      "id": "qbittorrent", "title": "qBittorrent", "glyph": "", "group": "Программы",
+      "roots": [
+        { "path": "{AppData}\\qBittorrent" },
+        { "path": "{LocalAppData}\\qBittorrent", "exclude": [ "logs", "cache", "GeoDB" ] }
+      ],
+      "processes": [ "qbittorrent" ], "wingetId": "qBittorrent.qBittorrent", "defaultOff": true,
+      "note": "Настройки, RSS и список раздач. Раздачи продолжатся, если файлы лежат не на диске C: (или ты переносишь их тоже)."
+    },
+    {
+      "id": "everything", "title": "Everything", "glyph": "", "group": "Программы",
+      "roots": [ { "path": "{AppData}\\Everything", "exclude": [ "*.db" ] } ],
+      "processes": [ "Everything" ], "wingetId": "voidtools.Everything", "defaultOff": true,
+      "note": "Настройки, закладки и фильтры поиска. Базу файлов Everything соберёт заново за минуту."
+    },
+    {
+      "id": "7zip", "title": "7-Zip", "glyph": "", "group": "Программы",
+      "roots": [], "registry": [ "HKCU\\Software\\7-Zip" ], "wingetId": "7zip.7zip", "defaultOff": true,
+      "note": "Настройки архиватора и пункты контекстного меню."
+    },
+    {
+      "id": "notepadpp", "title": "Notepad++", "glyph": "", "group": "Программы",
+      "roots": [ { "path": "{AppData}\\Notepad++" } ],
+      "processes": [ "notepad++" ], "wingetId": "Notepad++.Notepad++",
+      "note": "Настройки, плагины, темы и несохранённые вкладки."
+    },
+    {
+      "id": "sharex", "title": "ShareX", "glyph": "", "group": "Программы",
+      "roots": [ { "path": "{Documents}\\ShareX", "exclude": [ "Logs", "Backup" ] } ],
+      "processes": [ "ShareX" ], "wingetId": "ShareX.ShareX", "defaultOff": true,
+      "note": "Горячие клавиши, задачи после снимка, история и загрузчики."
+    },
+    {
+      "id": "totalcmd", "title": "Total Commander", "glyph": "", "group": "Программы",
+      "roots": [ { "path": "{AppData}\\GHISLER" } ],
+      "processes": [ "TOTALCMD64", "TOTALCMD" ],
+      "note": "Настройки панелей, кнопки и плагины."
+    },
+    {
+      "id": "keepassxc", "title": "KeePassXC — настройки", "glyph": "", "group": "Программы",
+      "roots": [ { "path": "{AppData}\\KeePassXC" } ],
+      "processes": [ "KeePassXC" ], "wingetId": "KeePassXCTeam.KeePassXC", "defaultOff": true,
+      "note": "Только настройки. Сам файл базы паролей перенеси вместе с «Документами» или своей папкой."
+    },
+    {
+      "id": "filezilla", "title": "FileZilla", "glyph": "", "group": "Программы",
+      "roots": [ { "path": "{AppData}\\FileZilla" } ],
+      "processes": [ "filezilla" ], "sensitive": true,
+      "note": "Менеджер сайтов с адресами и паролями."
+    },
+    {
+      "id": "putty", "title": "PuTTY", "glyph": "", "group": "Программы",
+      "roots": [], "registry": [ "HKCU\\Software\\SimonTatham\\PuTTY" ], "sensitive": true,
+      "note": "Сохранённые сессии и ключи хостов."
+    },
+    {
+      "id": "winscp", "title": "WinSCP", "glyph": "", "group": "Программы",
+      "roots": [ { "path": "{AppData}\\WinSCP.ini" } ], "registry": [ "HKCU\\Software\\Martin Prikryl" ], "sensitive": true,
+      "note": "Сохранённые сайты и настройки."
+    },
+    {
+      "id": "thunderbird", "title": "Thunderbird", "glyph": "", "group": "Программы",
+      "roots": [ { "path": "{AppData}\\Thunderbird", "exclude": [ "crashes", "minidumps", "cache2", "*.tmp" ] } ],
+      "processes": [ "thunderbird" ], "sensitive": true, "wingetId": "Mozilla.Thunderbird",
+      "note": "Почта, учётные записи, адресная книга и фильтры."
+    },
+
+    // ───────────── Офис ─────────────
+    {
+      "id": "office", "title": "Microsoft Office: шаблоны, подписи, словарь", "glyph": "", "group": "Офис",
+      "roots": [
+        { "path": "{AppData}\\Microsoft\\Templates", "exclude": [ "LiveContent", "*.tmp", "~$*" ] },
+        { "path": "{AppData}\\Microsoft\\Signatures" },
+        { "path": "{AppData}\\Microsoft\\UProof" }
+      ],
+      "processes": [ "WINWORD", "OUTLOOK", "EXCEL", "POWERPNT" ],
+      "note": "Шаблон Normal (шрифты и стили Word по умолчанию), свои шаблоны, подписи Outlook и личный словарь. Сам Office ставится заново и активируется входом в аккаунт Microsoft."
+    },
+
+    // ───────────── Разработка ─────────────
+    {
+      "id": "vscode", "title": "Visual Studio Code", "glyph": "", "group": "Разработка",
+      "roots": [
+        { "path": "{AppData}\\Code\\User", "exclude": [ "workspaceStorage", "History", "logs" ] },
+        { "path": "{Profile}\\.vscode\\extensions", "exclude": [ ".obsolete" ] },
+        { "path": "{Profile}\\.vscode\\argv.json" }
+      ],
+      "processes": [ "Code" ], "wingetId": "Microsoft.VisualStudioCode",
+      "note": "Настройки, горячие клавиши, сниппеты и все расширения."
+    },
+    {
+      "id": "cursor", "title": "Cursor", "glyph": "", "group": "Разработка",
+      "roots": [
+        { "path": "{AppData}\\Cursor\\User", "exclude": [ "workspaceStorage", "History", "logs" ] },
+        { "path": "{Profile}\\.cursor\\extensions", "exclude": [ ".obsolete" ] }
+      ],
+      "processes": [ "Cursor" ],
+      "note": "Настройки, горячие клавиши и расширения."
+    },
+    {
+      "id": "jetbrains", "title": "JetBrains IDE", "glyph": "", "group": "Разработка",
+      "roots": [ { "path": "{AppData}\\JetBrains", "exclude": [ "**/caches", "**/log", "**/tmp", "**/index" ] } ],
+      "note": "Настройки всех IDE JetBrains: темы, раскладки, плагины."
+    },
+    {
+      "id": "terminal", "title": "Windows Terminal", "glyph": "", "group": "Разработка",
+      "roots": [ { "path": "{LocalAppData}\\Packages\\Microsoft.WindowsTerminal_8wekyb3d8bbwe\\LocalState" } ],
+      "processes": [ "WindowsTerminal" ],
+      "note": "Профили, цветовые схемы и сочетания клавиш."
+    },
+    {
+      "id": "git", "title": "Git — настройки", "glyph": "", "group": "Разработка",
+      "roots": [ { "path": "{Profile}\\.gitconfig" }, { "path": "{Profile}\\.git-credentials" } ],
+      "sensitive": true,
+      "note": "Имя, почта, алиасы и сохранённые доступы Git."
+    },
+    {
+      "id": "ssh", "title": "Ключи SSH", "glyph": "", "group": "Разработка",
+      "roots": [ { "path": "{Profile}\\.ssh" } ], "sensitive": true,
+      "note": "Ключи для серверов и GitHub — после переноса заработают сразу. Это секрет: флешку никому не давай."
+    },
+    {
+      "id": "claudecode", "title": "Claude Code", "glyph": "", "group": "Разработка",
+      "roots": [
+        { "path": "{Profile}\\.claude", "exclude": [ "cache", "shell-snapshots", "statsig", "session-env", "debug", "file-history", "ide" ] },
+        { "path": "{Profile}\\.claude.json" }
+      ],
+      "sensitive": true, "defaultOff": true,
+      "note": "Настройки, память и история проектов Claude Code."
+    },
+    {
+      "id": "codex", "title": "Codex CLI", "glyph": "", "group": "Разработка",
+      "roots": [ { "path": "{Profile}\\.codex", "exclude": [ ".sandbox", ".sandbox-bin", ".tmp", "cache", "log", "logs" ] } ],
+      "sensitive": true, "defaultOff": true,
+      "note": "Настройки, вход и история сессий Codex."
+    },
+    {
+      "id": "qwen", "title": "Qwen Code", "glyph": "", "group": "Разработка",
+      "roots": [ { "path": "{Profile}\\.qwen", "exclude": [ "tmp", "logs" ] } ], "sensitive": true, "defaultOff": true,
+      "note": "Настройки и вход Qwen Code."
+    },
+    {
+      "id": "copilotcli", "title": "GitHub Copilot CLI", "glyph": "", "group": "Разработка",
+      "roots": [ { "path": "{Profile}\\.copilot", "exclude": [ "logs", "cache" ] } ], "sensitive": true, "defaultOff": true,
+      "note": "Настройки и история Copilot CLI."
+    },
+    {
+      "id": "ollama", "title": "Ollama: модели нейросетей", "glyph": "", "group": "Разработка",
+      "roots": [ { "path": "{Profile}\\.ollama", "exclude": [ "logs", "cache" ] } ],
+      "defaultOff": true, "sensitive": true, "wingetId": "Ollama.Ollama",
+      "note": "Скачанные модели и ключ Ollama. Модели можно скачать заново (ollama pull), но если интернет медленный — проще перенести."
+    },
+
+    // ───────────── Сеть и VPN ─────────────
+    {
+      "id": "fi", "title": "FI — Free Internet", "glyph": "", "group": "Сеть и VPN",
+      "roots": [ { "path": "{AppData}\\FI" }, { "path": "{ProgramData}\\FI", "exclude": [ "*.log", "logs", "base", "bin", "*.backup" ] } ],
+      "processes": [ "fi" ],
+      "note": "Оформление и выбранная стратегия FI."
+    },
+    {
+      "id": "velocity", "title": "VELOCITY", "glyph": "", "group": "Программы",
+      "roots": [ { "path": "{LocalAppData}\\Velocity", "exclude": [ "snapshots" ] } ],
+      "processes": [ "Velocity" ], "defaultOff": true,
+      "note": "Настройки, чек-листы и замеры FPS — можно сравнить старую систему с новой. Точки отката старой винды не берём: к новой они не относятся."
+    },
+    {
+      "id": "happ", "title": "Happ", "glyph": "", "group": "Сеть и VPN",
+      "roots": [ { "path": "{LocalAppData}\\Happ", "exclude": [ "cache", "dumps", "logs", "update" ] } ],
+      "processes": [ "Happ", "happd" ], "sensitive": true,
+      "note": "Маршрутизация и настройки Happ. Подписку на всякий случай сохрани отдельно — ссылку из личного кабинета.",
+      "reminder": "Happ: проверь, что подписка на месте, иначе добавь её заново по ссылке."
+    },
+    {
+      "id": "tgwsproxy", "title": "TgWsProxy", "glyph": "", "group": "Сеть и VPN",
+      "roots": [ { "path": "{AppData}\\TgWsProxy", "exclude": [ "*.log" ] } ],
+      "note": "Настройки прокси для Telegram."
+    },
+
+    // ───────────── Windows: мелочи, которые долго настраивать ─────────────
+    {
+      "id": "quickaccess", "title": "Закреплённые папки Проводника", "glyph": "", "section": "windows",
+      "roots": [ { "path": "{AppData}\\Microsoft\\Windows\\Recent\\AutomaticDestinations\\f01b4d95cf55d32a.automaticDestinations-ms" } ],
+      "after": "explorer",
+      "note": "Папки, закреплённые на панели быстрого доступа слева в Проводнике."
+    },
+    {
+      "id": "taskbarpins", "title": "Значки на панели задач", "glyph": "", "section": "windows",
+      "roots": [ { "path": "{AppData}\\Microsoft\\Internet Explorer\\Quick Launch\\User Pinned\\TaskBar" } ],
+      "registry": [ "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Taskband" ],
+      "after": "explorer",
+      "note": "Закреплённые программы. Встанут на место, когда сами программы будут установлены."
+    },
+    {
+      "id": "startpins", "title": "Значки в меню «Пуск»", "glyph": "", "section": "windows",
+      "roots": [ { "path": "{LocalAppData}\\Packages\\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\\LocalState\\start2.bin" } ],
+      "processes": [ "StartMenuExperienceHost" ], "after": "startmenu",
+      "note": "Закреплённое в «Пуске» Windows 11. Значки программ, которых ещё нет, появятся после их установки."
+    },
+    {
+      "id": "stickynotes", "title": "Записки на рабочем столе", "glyph": "", "section": "windows",
+      "roots": [ { "path": "{LocalAppData}\\Packages\\Microsoft.MicrosoftStickyNotes_8wekyb3d8bbwe\\LocalState" } ],
+      "processes": [ "Microsoft.Notes" ],
+      "note": "Все записки Sticky Notes."
+    },
+    {
+      "id": "notepadtabs", "title": "Блокнот: открытые вкладки", "glyph": "", "section": "windows",
+      "roots": [ { "path": "{LocalAppData}\\Packages\\Microsoft.WindowsNotepad_8wekyb3d8bbwe\\LocalState" } ],
+      "processes": [ "Notepad" ],
+      "note": "Несохранённые вкладки нового Блокнота Windows 11."
+    }
+  ]
+}

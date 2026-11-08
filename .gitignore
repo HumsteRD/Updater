@@ -1,0 +1,16 @@
+# Сборка .NET
+bin/
+obj/
+
+# Готовый Updater.exe — собирается командой dotnet publish, в репозиторий не кладём
+/publish/
+
+# Настройки редакторов
+.vs/
+.idea/
+*.user
+*.suo
+
+# Временные файлы проверок
+TestResults/
+*.pereezd-tmp

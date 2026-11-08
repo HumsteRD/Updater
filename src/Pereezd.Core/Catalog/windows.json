@@ -1,0 +1,393 @@
+{
+  // Настройки Windows, которые программа запоминает на старом ПК и выставляет на новом.
+  // kind: choice — выбор из вариантов; raw — переносится как было; special — своя логика в коде.
+  // values — значения реестра; data вариантов идут в том же порядке, null — значения нет.
+  // default — как в свежей Windows; recommended — что советуем, если на старом ПК не было иначе.
+  "settings": [
+    // ───────────── Оформление ─────────────
+    {
+      "id": "look.appsTheme", "group": "Оформление", "title": "Тема приложений",
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "name": "AppsUseLightTheme", "type": "dword" } ],
+      "options": [ { "id": "dark", "label": "Тёмная", "data": [ 0 ] }, { "id": "light", "label": "Светлая", "data": [ 1 ] } ],
+      "default": "light", "notify": "theme"
+    },
+    {
+      "id": "look.systemTheme", "group": "Оформление", "title": "Тема Windows (панель задач, «Пуск»)",
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "name": "SystemUsesLightTheme", "type": "dword" } ],
+      "options": [ { "id": "dark", "label": "Тёмная", "data": [ 0 ] }, { "id": "light", "label": "Светлая", "data": [ 1 ] } ],
+      "default": "light", "notify": "theme"
+    },
+    {
+      "id": "look.transparency", "group": "Оформление", "title": "Эффекты прозрачности",
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "name": "EnableTransparency", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Включены", "data": [ 1 ] }, { "id": "off", "label": "Выключены", "data": [ 0 ] } ],
+      "default": "on", "notify": "theme"
+    },
+    {
+      "id": "look.accent", "group": "Оформление", "title": "Цвет акцента", "kind": "raw",
+      "values": [
+        { "key": "HKCU\\Software\\Microsoft\\Windows\\DWM", "name": "AccentColor", "type": "dword" },
+        { "key": "HKCU\\Software\\Microsoft\\Windows\\DWM", "name": "ColorizationColor", "type": "dword" },
+        { "key": "HKCU\\Software\\Microsoft\\Windows\\DWM", "name": "ColorizationAfterglow", "type": "dword" },
+        { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Accent", "name": "AccentColorMenu", "type": "dword" },
+        { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Accent", "name": "StartColorMenu", "type": "dword" },
+        { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Accent", "name": "AccentPalette", "type": "binary" }
+      ],
+      "display": "color", "notify": "theme"
+    },
+    {
+      "id": "look.accentOnTaskbar", "group": "Оформление", "title": "Цвет акцента в «Пуске» и на панели задач",
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "name": "ColorPrevalence", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Да", "data": [ 1 ] }, { "id": "off", "label": "Нет", "data": [ 0 ] } ],
+      "default": "off", "notify": "theme"
+    },
+    {
+      "id": "look.accentOnTitle", "group": "Оформление", "title": "Цвет акцента на заголовках окон",
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\DWM", "name": "ColorPrevalence", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Да", "data": [ 1 ] }, { "id": "off", "label": "Нет", "data": [ 0 ] } ],
+      "default": "off", "notify": "theme"
+    },
+    { "id": "look.wallpaper", "group": "Оформление", "title": "Обои рабочего стола", "kind": "special", "handler": "wallpaper" },
+
+    // ───────────── Панель задач ─────────────
+    {
+      "id": "taskbar.align", "group": "Панель задач", "title": "Значки на панели задач", "minBuild": 22000,
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "TaskbarAl", "type": "dword" } ],
+      "options": [ { "id": "left", "label": "Слева, как в Windows 10", "data": [ 0 ] }, { "id": "center", "label": "По центру", "data": [ 1 ] } ],
+      "default": "center", "notify": "explorer"
+    },
+    {
+      "id": "taskbar.search", "group": "Панель задач", "title": "Поиск на панели задач",
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search", "name": "SearchboxTaskbarMode", "type": "dword" } ],
+      "options": [
+        { "id": "hidden", "label": "Скрыт", "data": [ 0 ] },
+        { "id": "icon", "label": "Значок", "data": [ 1 ] },
+        { "id": "box", "label": "Поле поиска", "data": [ 2 ] },
+        { "id": "label", "label": "Значок с подписью", "data": [ 3 ] }
+      ],
+      "default": "box", "notify": "explorer"
+    },
+    {
+      "id": "taskbar.taskView", "group": "Панель задач", "title": "Кнопка «Представление задач»",
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "ShowTaskViewButton", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Показывать", "data": [ 1 ] }, { "id": "off", "label": "Скрыть", "data": [ 0 ] } ],
+      "default": "on", "notify": "explorer"
+    },
+    {
+      "id": "taskbar.widgets", "group": "Панель задач", "title": "Виджеты (погода и новости)", "minBuild": 22000,
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "TaskbarDa", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Показывать", "data": [ 1 ] }, { "id": "off", "label": "Скрыть", "data": [ 0 ] } ],
+      "default": "on", "notify": "explorer",
+      "hint": "В новых сборках Windows защищает этот параметр — если не получится, виджеты отключаются в Параметрах → Персонализация → Панель задач."
+    },
+    {
+      "id": "taskbar.copilot", "group": "Панель задач", "title": "Кнопка Copilot", "minBuild": 22631,
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "ShowCopilotButton", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Показывать", "data": [ 1 ] }, { "id": "off", "label": "Скрыть", "data": [ 0 ] } ],
+      "default": "on", "notify": "explorer"
+    },
+    {
+      "id": "taskbar.combine", "group": "Панель задач", "title": "Группировать окна одной программы", "minBuild": 22631,
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "TaskbarGlomLevel", "type": "dword" } ],
+      "options": [
+        { "id": "always", "label": "Всегда, без подписей", "data": [ 0 ] },
+        { "id": "full", "label": "Когда панель заполнена", "data": [ 1 ] },
+        { "id": "never", "label": "Никогда", "data": [ 2 ] }
+      ],
+      "default": "always", "notify": "explorer"
+    },
+    {
+      "id": "taskbar.seconds", "group": "Панель задач", "title": "Секунды в часах", "minBuild": 22621,
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "ShowSecondsInSystemClock", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Показывать", "data": [ 1 ] }, { "id": "off", "label": "Нет", "data": [ 0 ] } ],
+      "default": "off", "notify": "explorer"
+    },
+    {
+      "id": "taskbar.endTask", "group": "Панель задач", "title": "«Завершить задачу» в меню значка", "minBuild": 22631,
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\\TaskbarDeveloperSettings", "name": "TaskbarEndTask", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Да", "data": [ 1 ] }, { "id": "off", "label": "Нет", "data": [ 0 ] } ],
+      "default": "off", "recommended": "on", "notify": "explorer",
+      "hint": "Правый клик по зависшей игре на панели задач → «Завершить задачу», без Диспетчера задач."
+    },
+
+    // ───────────── Проводник ─────────────
+    {
+      "id": "explorer.extensions", "group": "Проводник", "title": "Расширения файлов (.exe, .jpg)",
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "HideFileExt", "type": "dword" } ],
+      "options": [ { "id": "show", "label": "Показывать", "data": [ 0 ] }, { "id": "hide", "label": "Скрывать", "data": [ 1 ] } ],
+      "default": "hide", "recommended": "show", "notify": "explorer"
+    },
+    {
+      "id": "explorer.hidden", "group": "Проводник", "title": "Скрытые файлы и папки",
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "Hidden", "type": "dword" } ],
+      "options": [ { "id": "show", "label": "Показывать", "data": [ 1 ] }, { "id": "hide", "label": "Скрывать", "data": [ 2 ] } ],
+      "default": "hide", "notify": "explorer"
+    },
+    {
+      "id": "explorer.launchTo", "group": "Проводник", "title": "Проводник открывается на",
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "LaunchTo", "type": "dword" } ],
+      "options": [
+        { "id": "thispc", "label": "«Этот компьютер»", "data": [ 1 ] },
+        { "id": "home", "label": "Главная / быстрый доступ", "data": [ 2 ] },
+        { "id": "downloads", "label": "Загрузки", "data": [ 3 ] }
+      ],
+      "default": "home", "notify": "explorer"
+    },
+    {
+      "id": "explorer.recent", "group": "Проводник", "title": "Недавние файлы и частые папки на главной",
+      "values": [
+        { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer", "name": "ShowRecent", "type": "dword" },
+        { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer", "name": "ShowFrequent", "type": "dword" }
+      ],
+      "options": [ { "id": "show", "label": "Показывать", "data": [ 1, 1 ] }, { "id": "hide", "label": "Не показывать", "data": [ 0, 0 ] } ],
+      "default": "show", "notify": "explorer"
+    },
+    {
+      "id": "explorer.compact", "group": "Проводник", "title": "Компактный вид списков", "minBuild": 22000,
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "UseCompactMode", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Да", "data": [ 1 ] }, { "id": "off", "label": "Нет", "data": [ 0 ] } ],
+      "default": "off", "notify": "explorer"
+    },
+    { "id": "explorer.classicMenu", "group": "Проводник", "title": "Контекстное меню", "kind": "special", "handler": "classicmenu", "minBuild": 22000, "notify": "explorer",
+      "hint": "Классическое меню по правому клику — сразу все пункты, без «Показать дополнительные параметры»." },
+
+    // ───────────── «Пуск» и поиск ─────────────
+    {
+      "id": "start.layout", "group": "«Пуск» и поиск", "title": "Раскладка меню «Пуск»", "minBuild": 22621,
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "Start_Layout", "type": "dword" } ],
+      "options": [
+        { "id": "default", "label": "Обычная", "data": [ 0 ] },
+        { "id": "pins", "label": "Больше закреплённых", "data": [ 1 ] },
+        { "id": "recs", "label": "Больше рекомендаций", "data": [ 2 ] }
+      ],
+      "default": "default", "notify": "startmenu"
+    },
+    {
+      "id": "start.iris", "group": "«Пуск» и поиск", "title": "Советы и реклама приложений в рекомендациях", "minBuild": 22621,
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "Start_IrisRecommendations", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Показывать", "data": [ 1 ] }, { "id": "off", "label": "Не показывать", "data": [ 0 ] } ],
+      "default": "on", "recommended": "off", "notify": "startmenu"
+    },
+    {
+      "id": "start.trackDocs", "group": "«Пуск» и поиск", "title": "Недавние файлы в «Пуске» и списках переходов",
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "Start_TrackDocs", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Показывать", "data": [ 1 ] }, { "id": "off", "label": "Не показывать", "data": [ 0 ] } ],
+      "default": "on", "notify": "startmenu"
+    },
+    {
+      "id": "start.trackProgs", "group": "«Пуск» и поиск", "title": "Часто используемые приложения",
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "Start_TrackProgs", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Показывать", "data": [ 1 ] }, { "id": "off", "label": "Не показывать", "data": [ 0 ] } ],
+      "default": "on", "notify": "startmenu"
+    },
+    {
+      "id": "start.webSearch", "group": "«Пуск» и поиск", "title": "Результаты из интернета (Bing) в поиске",
+      "values": [
+        { "key": "HKCU\\Software\\Policies\\Microsoft\\Windows\\Explorer", "name": "DisableSearchBoxSuggestions", "type": "dword" },
+        { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search", "name": "BingSearchEnabled", "type": "dword" }
+      ],
+      "options": [ { "id": "on", "label": "Показывать", "data": [ null, null ] }, { "id": "off", "label": "Только файлы и программы", "data": [ 1, 0 ] } ],
+      "default": "on", "recommended": "off", "notify": "explorer",
+      "hint": "Без Bing поиск в «Пуске» быстрее и не отправляет набранное в интернет."
+    },
+    {
+      "id": "start.highlights", "group": "«Пуск» и поиск", "title": "Картинки и «события дня» в поиске",
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\SearchSettings", "name": "IsDynamicSearchBoxEnabled", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Показывать", "data": [ 1 ] }, { "id": "off", "label": "Не показывать", "data": [ 0 ] } ],
+      "default": "on", "recommended": "off", "notify": "explorer"
+    },
+
+    // ───────────── Мышь и клавиатура ─────────────
+    {
+      "id": "input.mouseAccel", "group": "Мышь и клавиатура", "title": "Повышенная точность указателя (ускорение мыши)",
+      "values": [
+        { "key": "HKCU\\Control Panel\\Mouse", "name": "MouseSpeed", "type": "sz" },
+        { "key": "HKCU\\Control Panel\\Mouse", "name": "MouseThreshold1", "type": "sz" },
+        { "key": "HKCU\\Control Panel\\Mouse", "name": "MouseThreshold2", "type": "sz" }
+      ],
+      "options": [ { "id": "on", "label": "Включена", "data": [ "1", "6", "10" ] }, { "id": "off", "label": "Выключена — для игр", "data": [ "0", "0", "0" ] } ],
+      "default": "on", "recommended": "off", "notify": "mouse",
+      "hint": "Без ускорения одно и то же движение рукой всегда даёт один и тот же поворот камеры."
+    },
+    {
+      "id": "input.mouseSpeed", "group": "Мышь и клавиатура", "title": "Скорость указателя", "kind": "raw",
+      "values": [ { "key": "HKCU\\Control Panel\\Mouse", "name": "MouseSensitivity", "type": "sz" } ],
+      "display": "{0} из 20", "notify": "mouse"
+    },
+    {
+      "id": "input.mouseSwap", "group": "Мышь и клавиатура", "title": "Основная кнопка мыши",
+      "values": [ { "key": "HKCU\\Control Panel\\Mouse", "name": "SwapMouseButtons", "type": "sz" } ],
+      "options": [ { "id": "left", "label": "Левая", "data": [ "0" ] }, { "id": "right", "label": "Правая (для левши)", "data": [ "1" ] } ],
+      "default": "left", "notify": "mouse"
+    },
+    {
+      "id": "input.wheel", "group": "Мышь и клавиатура", "title": "Прокрутка колёсиком", "kind": "raw",
+      "values": [ { "key": "HKCU\\Control Panel\\Desktop", "name": "WheelScrollLines", "type": "sz" } ],
+      "display": "{0} стр. за щелчок", "notify": "mouse"
+    },
+    { "id": "input.languages", "group": "Мышь и клавиатура", "title": "Языки и раскладки клавиатуры", "kind": "special", "handler": "languages" },
+    {
+      "id": "input.toggle", "group": "Мышь и клавиатура", "title": "Переключение раскладки",
+      "values": [
+        { "key": "HKCU\\Keyboard Layout\\Toggle", "name": "Language Hotkey", "type": "sz" },
+        { "key": "HKCU\\Keyboard Layout\\Toggle", "name": "Hotkey", "type": "sz" }
+      ],
+      "options": [
+        { "id": "altshift", "label": "Alt + Shift", "data": [ "1", "1" ] },
+        { "id": "ctrlshift", "label": "Ctrl + Shift", "data": [ "2", "2" ] },
+        { "id": "grave", "label": "Ё (гравис)", "data": [ "4", "4" ] },
+        { "id": "none", "label": "Только Win + Пробел", "data": [ "3", "3" ] }
+      ],
+      "default": "altshift", "notify": "relogin"
+    },
+    {
+      "id": "input.stickyKeys", "group": "Мышь и клавиатура", "title": "Окно «Залипание клавиш» по 5 нажатиям Shift",
+      "values": [
+        { "key": "HKCU\\Control Panel\\Accessibility\\StickyKeys", "name": "Flags", "type": "sz" },
+        { "key": "HKCU\\Control Panel\\Accessibility\\Keyboard Response", "name": "Flags", "type": "sz" },
+        { "key": "HKCU\\Control Panel\\Accessibility\\ToggleKeys", "name": "Flags", "type": "sz" }
+      ],
+      "options": [ { "id": "on", "label": "Появляется", "data": [ "510", "126", "62" ] }, { "id": "off", "label": "Отключено", "data": [ "506", "122", "58" ] } ],
+      "default": "on", "recommended": "off",
+      "hint": "Это окно любит выскакивать посреди игры, когда зажимаешь Shift."
+    },
+    {
+      "id": "input.keyRepeat", "group": "Мышь и клавиатура", "title": "Повтор клавиш (задержка и скорость)", "kind": "raw",
+      "values": [
+        { "key": "HKCU\\Control Panel\\Keyboard", "name": "KeyboardDelay", "type": "sz" },
+        { "key": "HKCU\\Control Panel\\Keyboard", "name": "KeyboardSpeed", "type": "sz" }
+      ],
+      "display": "задержка {0}, скорость {1}", "notify": "keyboard"
+    },
+    {
+      "id": "input.numlock", "group": "Мышь и клавиатура", "title": "Num Lock при входе", "kind": "raw",
+      "values": [ { "key": "HKCU\\Control Panel\\Keyboard", "name": "InitialKeyboardIndicators", "type": "sz" } ],
+      "display": "значение {0}"
+    },
+
+    // ───────────── Игры ─────────────
+    {
+      "id": "games.gameMode", "group": "Игры", "title": "Игровой режим Windows",
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\GameBar", "name": "AutoGameModeEnabled", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Включён", "data": [ 1 ] }, { "id": "off", "label": "Выключен", "data": [ 0 ] } ],
+      "default": "on", "recommended": "on"
+    },
+    {
+      "id": "games.gameDvr", "group": "Игры", "title": "Фоновая запись Xbox Game Bar",
+      "values": [
+        { "key": "HKCU\\System\\GameConfigStore", "name": "GameDVR_Enabled", "type": "dword" },
+        { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR", "name": "AppCaptureEnabled", "type": "dword" }
+      ],
+      "options": [ { "id": "on", "label": "Включена", "data": [ 1, 1 ] }, { "id": "off", "label": "Выключена", "data": [ 0, 0 ] } ],
+      "default": "on", "recommended": "off",
+      "hint": "Постоянная запись последних минут игры отнимает немного FPS. Клипы удобнее делать в NVIDIA App или OBS."
+    },
+    {
+      "id": "games.hags", "group": "Игры", "title": "Аппаратное планирование GPU", "admin": true,
+      "values": [ { "key": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers", "name": "HwSchMode", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Включено", "data": [ 2 ] }, { "id": "off", "label": "Выключено", "data": [ 1 ] } ],
+      "notify": "reboot",
+      "hint": "Нужно для генерации кадров DLSS 3. Начнёт работать после перезагрузки и с драйвером видеокарты."
+    },
+    {
+      "id": "games.windowed", "group": "Игры", "title": "Оптимизации для игр в окне и авто-HDR", "kind": "raw",
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\DirectX\\UserGpuPreferences", "name": "DirectXUserGlobalSettings", "type": "sz" } ],
+      "display": "{0}"
+    },
+
+    // ───────────── Реклама и слежка ─────────────
+    {
+      "id": "ads.adId", "group": "Реклама и слежка", "title": "Рекламный идентификатор",
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo", "name": "Enabled", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Включён", "data": [ 1 ] }, { "id": "off", "label": "Выключен", "data": [ 0 ] } ],
+      "default": "on", "recommended": "off"
+    },
+    {
+      "id": "ads.tailored", "group": "Реклама и слежка", "title": "Персональные советы по данным диагностики",
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Privacy", "name": "TailoredExperiencesWithDiagnosticDataEnabled", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Включены", "data": [ 1 ] }, { "id": "off", "label": "Выключены", "data": [ 0 ] } ],
+      "default": "on", "recommended": "off"
+    },
+    {
+      "id": "ads.suggestions", "group": "Реклама и слежка", "title": "Советы, предложения и автоустановка рекламных приложений",
+      "values": [
+        { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SubscribedContent-338388Enabled", "type": "dword" },
+        { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SubscribedContent-338389Enabled", "type": "dword" },
+        { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SubscribedContent-353694Enabled", "type": "dword" },
+        { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SubscribedContent-353696Enabled", "type": "dword" },
+        { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SubscribedContent-310093Enabled", "type": "dword" },
+        { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SystemPaneSuggestionsEnabled", "type": "dword" },
+        { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SilentInstalledAppsEnabled", "type": "dword" },
+        { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SoftLandingEnabled", "type": "dword" }
+      ],
+      "options": [ { "id": "on", "label": "Включены", "data": [ 1, 1, 1, 1, 1, 1, 1, 1 ] }, { "id": "off", "label": "Выключены", "data": [ 0, 0, 0, 0, 0, 0, 0, 0 ] } ],
+      "default": "on", "recommended": "off",
+      "hint": "Всплывающие «советы», реклама в Параметрах, приветствие после обновлений и сами собой появляющиеся Candy Crush и TikTok."
+    },
+    {
+      "id": "ads.lockScreen", "group": "Реклама и слежка", "title": "Факты и советы на экране блокировки",
+      "values": [
+        { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "RotatingLockScreenOverlayEnabled", "type": "dword" },
+        { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SubscribedContent-338387Enabled", "type": "dword" }
+      ],
+      "options": [ { "id": "on", "label": "Показывать", "data": [ 1, 1 ] }, { "id": "off", "label": "Не показывать", "data": [ 0, 0 ] } ],
+      "default": "on", "recommended": "off"
+    },
+    {
+      "id": "ads.accountNags", "group": "Реклама и слежка", "title": "Напоминания про учётную запись Microsoft в «Пуске»", "minBuild": 22621,
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "Start_AccountNotifications", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Показывать", "data": [ 1 ] }, { "id": "off", "label": "Не показывать", "data": [ 0 ] } ],
+      "default": "on", "recommended": "off", "notify": "startmenu"
+    },
+    {
+      "id": "ads.finishSetup", "group": "Реклама и слежка", "title": "Экран «Давайте завершим настройку устройства»",
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\UserProfileEngagement", "name": "ScoobeSystemSettingEnabled", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Показывать", "data": [ 1 ] }, { "id": "off", "label": "Не показывать", "data": [ 0 ] } ],
+      "default": "on", "recommended": "off"
+    },
+
+    // ───────────── Система ─────────────
+    {
+      "id": "system.clipboard", "group": "Система", "title": "Журнал буфера обмена (Win + V)",
+      "values": [ { "key": "HKCU\\Software\\Microsoft\\Clipboard", "name": "EnableClipboardHistory", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Включён", "data": [ 1 ] }, { "id": "off", "label": "Выключен", "data": [ 0 ] } ],
+      "default": "off", "recommended": "on"
+    },
+    { "id": "system.timezone", "group": "Система", "title": "Часовой пояс", "kind": "special", "handler": "timezone" },
+    {
+      "id": "system.formats", "group": "Система", "title": "Формат даты и времени", "kind": "raw",
+      "values": [
+        { "key": "HKCU\\Control Panel\\International", "name": "sShortDate", "type": "sz" },
+        { "key": "HKCU\\Control Panel\\International", "name": "sLongDate", "type": "sz" },
+        { "key": "HKCU\\Control Panel\\International", "name": "sShortTime", "type": "sz" },
+        { "key": "HKCU\\Control Panel\\International", "name": "sTimeFormat", "type": "sz" },
+        { "key": "HKCU\\Control Panel\\International", "name": "iFirstDayOfWeek", "type": "sz" }
+      ],
+      "display": "{0}, {2}", "notify": "intl"
+    },
+    { "id": "system.power", "group": "Система", "title": "Схема электропитания", "kind": "special", "handler": "power", "admin": true },
+    { "id": "system.computerName", "group": "Система", "title": "Имя компьютера", "kind": "special", "handler": "computername", "admin": true, "notify": "reboot",
+      "hint": "Пригодится, если к компьютеру подключаются по сети или его знают другие устройства." },
+    { "id": "system.env", "group": "Система", "title": "Переменные среды (PATH и свои)", "kind": "special", "handler": "env", "notify": "env" },
+    {
+      "id": "system.noAutoReboot", "group": "Система", "title": "Не перезагружать для обновлений, пока я в системе", "admin": true,
+      "values": [ { "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU", "name": "NoAutoRebootWithLoggedOnUsers", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Не перезагружать", "data": [ 1 ] }, { "id": "off", "label": "Как решит Windows", "data": [ null ] } ],
+      "default": "off", "recommended": "on",
+      "hint": "Чтобы обновление не перезагрузило компьютер посреди игры или загрузки."
+    },
+    {
+      "id": "system.fastStartup", "group": "Система", "title": "Быстрый запуск", "admin": true,
+      "values": [ { "key": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power", "name": "HiberbootEnabled", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Включён", "data": [ 1 ] }, { "id": "off", "label": "Выключен", "data": [ 0 ] } ],
+      "default": "on",
+      "hint": "Выключение — это почти гибернация. Если после «выключения» глючат драйверы или второй системе не видно диск, его выключают."
+    },
+    {
+      "id": "system.longPaths", "group": "Система", "title": "Длинные пути к файлам (больше 260 символов)", "admin": true,
+      "values": [ { "key": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem", "name": "LongPathsEnabled", "type": "dword" } ],
+      "options": [ { "id": "on", "label": "Разрешены", "data": [ 1 ] }, { "id": "off", "label": "Нет", "data": [ 0 ] } ],
+      "default": "off"
+    }
+  ]
+}

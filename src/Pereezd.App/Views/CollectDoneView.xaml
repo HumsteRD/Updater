@@ -1,0 +1,70 @@
+<UserControl x:Class="Pereezd.App.Views.CollectDoneView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer Style="{StaticResource CleanScrollViewer}">
+        <StackPanel Margin="40,30,40,28" MaxWidth="980" HorizontalAlignment="Left">
+            <StackPanel Orientation="Horizontal">
+                <Border Width="48" Height="48" CornerRadius="12">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="{StaticResource SuccessDim}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Ok}" Value="False">
+                                    <Setter Property="Background" Value="{StaticResource WarningDim}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Text="{Binding StatusGlyph}" FontSize="22">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource Icon}">
+                                <Setter Property="Foreground" Value="{StaticResource Success}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Ok}" Value="False">
+                                        <Setter Property="Foreground" Value="{StaticResource Warning}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Border>
+                <StackPanel Margin="16,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Title}" Style="{StaticResource TextTitle}"/>
+                    <TextBlock Text="{Binding Subtitle}" Style="{StaticResource TextBody}" Margin="0,3,0,0" MaxWidth="820" HorizontalAlignment="Left"/>
+                </StackPanel>
+            </StackPanel>
+
+            <ItemsControl ItemsSource="{Binding Stats}" ItemTemplate="{StaticResource StatTile}" Margin="0,24,0,0">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+
+            <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+                <Button Style="{StaticResource ButtonPrimary}" Command="{Binding OpenFolder}" Margin="0,0,10,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE838;" FontFamily="{StaticResource FontIcons}" FontSize="13" Margin="0,1,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Открыть папку со сборкой"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource ButtonSecondary}" Content="Отчёт" Command="{Binding OpenReport}" Margin="0,0,10,0"/>
+                <Button Style="{StaticResource ButtonSecondary}" Content="Собрать ещё раз" Command="{Binding Again}"/>
+            </StackPanel>
+
+            <StackPanel Visibility="{Binding HasProblems, Converter={StaticResource Vis}}" Margin="0,30,0,0">
+                <TextBlock Text="Что не получилось взять" Style="{StaticResource TextHeading}"/>
+                <TextBlock Text="Обычно это файлы, занятые запущенными программами. Закрой их и запусти сборы ещё раз — докопирую только недостающее."
+                           Style="{StaticResource TextMuted}" Margin="0,3,0,6" TextWrapping="Wrap"/>
+                <ItemsControl ItemsSource="{Binding Problems}" ItemTemplate="{StaticResource CheckLineRow}"/>
+            </StackPanel>
+
+            <TextBlock Text="Перед переустановкой" Style="{StaticResource TextHeading}" Margin="0,30,0,6"/>
+            <ItemsControl ItemsSource="{Binding Checklist}" ItemTemplate="{StaticResource CheckLineRow}"/>
+
+            <StackPanel Orientation="Horizontal" Margin="0,26,0,0">
+                <Button Style="{StaticResource ButtonGhost}" Content="На главную" Command="{Binding Home}" Margin="0,0,10,0"/>
+                <Button Style="{StaticResource ButtonGhost}" Content="Закрыть программу" Command="{Binding Exit}"/>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

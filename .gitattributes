@@ -1,0 +1,7 @@
+# Исходники хранятся и выдаются с LF на любой системе — как в FI
+* text=auto eol=lf
+
+# Двоичные файлы: снимок индекса winget, значок
+*.gz binary
+*.ico binary
+*.png binary

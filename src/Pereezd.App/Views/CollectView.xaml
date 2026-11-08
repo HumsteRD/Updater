@@ -1,0 +1,138 @@
+<UserControl x:Class="Pereezd.App.Views.CollectView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="272"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Шапка -->
+        <DockPanel Grid.ColumnSpan="2" Margin="28,20,28,14">
+            <Button DockPanel.Dock="Left" Style="{StaticResource ButtonGhost}" Command="{Binding Back}" Margin="-8,0,10,0" VerticalAlignment="Top" ToolTip="Назад">
+                <TextBlock Text="&#xE72B;" FontFamily="{StaticResource FontIcons}" FontSize="14"/>
+            </Button>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center"
+                        Visibility="{Binding Scanning, Converter={StaticResource Vis}}">
+                <ProgressBar Style="{StaticResource Progress}" IsIndeterminate="True" Width="120" Height="4" Margin="0,0,10,0"/>
+                <TextBlock Text="{Binding ScanStage}" Style="{StaticResource TextMuted}"/>
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Что берём с собой" Style="{StaticResource TextTitle}"/>
+                <TextBlock Text="Отметь нужное — всё сложу в одну папку вместе с программой. Самое ценное уже отмечено." Style="{StaticResource TextBody}" Margin="0,4,0,0"/>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Разделы -->
+        <Border Grid.Row="1" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="0,1,1,0" Padding="0,10,0,0">
+            <ListBox ItemsSource="{Binding Sections}" SelectedItem="{Binding SelectedSection}" Style="{StaticResource NavList}"
+                     ItemContainerStyle="{StaticResource NavListItem}" ItemTemplate="{StaticResource SectionNav}"/>
+        </Border>
+
+        <!-- Содержимое раздела -->
+        <Border Grid.Row="1" Grid.Column="1" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="0,1,0,0">
+            <ScrollViewer Style="{StaticResource CleanScrollViewer}" Padding="20,14,24,20">
+                <StackPanel>
+                    <Border Style="{StaticResource Card}" Background="{StaticResource WarningDim}" BorderThickness="0" Padding="14,10" Margin="0,0,0,12"
+                            Visibility="{Binding ShowElevate, Converter={StaticResource Vis}}">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Style="{StaticResource ButtonCompact}" Content="Перезапустить с правами" Command="{Binding Elevate}"/>
+                            <TextBlock Style="{StaticResource TextBody}" Foreground="{StaticResource Warning}" VerticalAlignment="Center" Margin="0,0,12,0"
+                                       Text="Без прав администратора не сохранятся пароли Wi-Fi и ключи BitLocker."/>
+                        </DockPanel>
+                    </Border>
+                    <DockPanel Margin="0,0,0,8">
+                        <Button DockPanel.Dock="Right" Style="{StaticResource ButtonCompact}" Command="{Binding AddFolder}" VerticalAlignment="Top"
+                                Visibility="{Binding SelectedSection.IsFiles, Converter={StaticResource Vis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE710;" FontFamily="{StaticResource FontIcons}" FontSize="11" Margin="0,1,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Добавить папку"/>
+                            </StackPanel>
+                        </Button>
+                        <StackPanel>
+                            <TextBlock Text="{Binding SelectedSection.Title}" Style="{StaticResource TextHeading}" FontSize="17"/>
+                            <TextBlock Text="{Binding SelectedSection.Hint}" Style="{StaticResource TextMuted}" Margin="0,3,0,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </DockPanel>
+                    <ItemsControl ItemsSource="{Binding SelectedSection.View}" ItemTemplateSelector="{StaticResource ItemSelector}">
+                        <!-- Группы есть только у «Настроек программ»: «Главное» и «По желанию». В остальных разделах заголовков нет. -->
+                        <ItemsControl.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.HeaderTemplate>
+                                    <DataTemplate>
+                                        <DockPanel Margin="12,16,4,6">
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Button Style="{StaticResource ButtonLink}" Content="Отметить все" Margin="0,0,14,0"
+                                                        Command="{Binding DataContext.SelectedSection.SelectGroup, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding Name}"/>
+                                                <Button Style="{StaticResource ButtonLink}" Content="Снять"
+                                                        Command="{Binding DataContext.SelectedSection.ClearGroup, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding Name}"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" Style="{StaticResource TextHeading}" FontSize="14"/>
+                                                <TextBlock Text="{Binding ItemCount}" Style="{StaticResource TextValue}" Margin="8,1,0,0" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </GroupStyle.HeaderTemplate>
+                            </GroupStyle>
+                        </ItemsControl.GroupStyle>
+                    </ItemsControl>
+                    <TextBlock Style="{StaticResource TextMuted}" Margin="12,16,0,0" Text="Здесь пока ничего не нашлось."
+                               Visibility="{Binding SelectedSection.Items.Count, Converter={StaticResource NotEmpty}, ConverterParameter=!}"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Куда и сколько -->
+        <Border Grid.Row="2" Grid.ColumnSpan="2" Background="{StaticResource BgSurface}" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="0,1,0,0" Padding="28,14">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Куда" Style="{StaticResource TextLabel}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <ComboBox Width="330" ItemsSource="{Binding Drives}" SelectedItem="{Binding Destination}" DisplayMemberPath="Display"/>
+                    <Button Style="{StaticResource ButtonCompact}" Content="Обзор…" Command="{Binding BrowseDestination}" Margin="8,0,0,0" MinHeight="32"/>
+                    <Button Style="{StaticResource ButtonGhost}" Command="{Binding RefreshDrivesCommand}" Margin="2,0,0,0" MinHeight="32" ToolTip="Обновить список дисков">
+                        <TextBlock Text="&#xE72C;" FontFamily="{StaticResource FontIcons}" FontSize="12"/>
+                    </Button>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Margin="24,0" VerticalAlignment="Center">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Right" Text="{Binding CapacityText}" Style="{StaticResource TextValue}"/>
+                        <TextBlock/>
+                    </DockPanel>
+                    <ProgressBar Margin="0,6,0,0" Value="{Binding CapacityFraction, Mode=OneWay}" Height="6">
+                        <ProgressBar.Style>
+                            <Style TargetType="ProgressBar" BasedOn="{StaticResource Progress}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding OverCapacity}" Value="True">
+                                        <Setter Property="Foreground" Value="{StaticResource Critical}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ProgressBar.Style>
+                    </ProgressBar>
+                    <TextBlock Text="{Binding DestinationNote}" Style="{StaticResource TextMuted}" Margin="0,5,0,0" TextTrimming="CharacterEllipsis"
+                               Visibility="{Binding DestinationNote, Converter={StaticResource NotEmpty}}"/>
+                </StackPanel>
+                <Button Grid.Column="2" Style="{StaticResource ButtonPrimary}" Command="{Binding Start}" MinHeight="42" Padding="22,0" FontSize="14"
+                        IsEnabled="{Binding CanStart}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding StartText}"/>
+                        <TextBlock Text="&#xE72A;" FontFamily="{StaticResource FontIcons}" FontSize="12" Margin="10,1,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

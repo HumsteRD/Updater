@@ -1,0 +1,17 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <Version>1.0.0</Version>
+    <Company>Updater</Company>
+    <Product>Updater</Product>
+    <Copyright>HumsteRD</Copyright>
+    <SatelliteResourceLanguages>ru</SatelliteResourceLanguages>
+    <!-- Отладочные символы внутри сборок: после публикации остаётся ровно один exe. -->
+    <DebugType>embedded</DebugType>
+    <!-- Предупреждения о платформе бессмысленны: программа только для Windows. -->
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+  </PropertyGroup>
+</Project>
