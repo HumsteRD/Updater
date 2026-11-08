@@ -13,4 +13,4 @@ obj/
 
 # Временные файлы проверок
 TestResults/
-*.pereezd-tmp
+*.updater-tmp

@@ -1,0 +1,87 @@
+<Window x:Class="Updater.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="Updater" Height="780" Width="1200" MinHeight="620" MinWidth="980"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BgBase}"
+        TextOptions.TextFormattingMode="Ideal"
+        UseLayoutRounding="True"
+        Icon="updater.ico">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="6" CornerRadius="0" GlassFrameThickness="0"/>
+    </shell:WindowChrome.WindowChrome>
+
+    <Border x:Name="RootFrame" BorderBrush="{StaticResource BorderStrong}" BorderThickness="1" Background="{StaticResource BgBase}">
+        <Grid x:Name="RootGrid">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="46"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Заголовок окна -->
+            <Border Background="Transparent" MouseLeftButtonDown="TitleBar_MouseDown" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="0,0,0,1">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                        <!-- Знак: две стрелки «отсюда — туда» в тёмной плитке -->
+                        <Border Width="24" Height="24" CornerRadius="6" Background="#0A0C0E" BorderBrush="#1FFFFFFF" BorderThickness="1">
+                            <Viewbox Margin="5">
+                                <Canvas Width="16" Height="16">
+                                    <Path Fill="{StaticResource Accent}" Data="M 1,5 L 11,5 L 11,2 L 15,6.5 L 11,11 L 11,8 L 1,8 Z"/>
+                                    <Path Fill="{StaticResource Accent}" Opacity="0.45" Data="M 15,11 L 5,11 L 5,8.5 L 1,12.5 L 5,16 L 5,14 L 15,14 Z"/>
+                                </Canvas>
+                            </Viewbox>
+                        </Border>
+                        <TextBlock Text="Updater" Margin="10,0,0,0" VerticalAlignment="Center" FontFamily="{StaticResource FontDisplay}"
+                                   FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                        <TextBlock Text="{Binding Breadcrumb}" Margin="12,1,0,0" VerticalAlignment="Center" Style="{StaticResource TextMuted}"
+                                   Visibility="{Binding Breadcrumb, Converter={StaticResource NotEmpty}}"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,6,0"
+                                shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                        <Border Style="{StaticResource ChipWarn}" Margin="0,0,10,0"
+                                Visibility="{Binding IsAdmin, Converter={StaticResource Vis}, ConverterParameter=!}">
+                            <TextBlock Style="{StaticResource ChipText}" Foreground="{StaticResource Warning}" Text="Без прав администратора"/>
+                        </Border>
+                        <Button Style="{StaticResource CaptionButton}" Content="&#xE921;" Click="Minimize_Click" ToolTip="Свернуть"/>
+                        <Button x:Name="MaximizeButton" Style="{StaticResource CaptionButton}" Content="&#xE922;" Click="Maximize_Click" ToolTip="Развернуть"/>
+                        <Button Style="{StaticResource CaptionButtonClose}" Content="&#xE8BB;" Click="Close_Click" ToolTip="Закрыть"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <ContentControl Grid.Row="1" Content="{Binding Page}" Focusable="False"/>
+
+            <!-- Вопрос поверх окна -->
+            <Grid Grid.RowSpan="2" Visibility="{Binding Dialog, Converter={StaticResource NotEmpty}}">
+                <Border Background="#B3050608"/>
+                <Border Style="{StaticResource Card}" Background="{StaticResource BgElevated}" BorderBrush="{StaticResource BorderStrong}"
+                        Width="480" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24,22"
+                        DataContext="{Binding Dialog}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Title}" Style="{StaticResource TextHeading}" FontSize="18"/>
+                        <TextBlock Text="{Binding Text}" Style="{StaticResource TextBody}" Margin="0,10,0,0"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,22,0,0">
+                            <Button Content="{Binding CancelText}" Command="{Binding Cancel}" Style="{StaticResource ButtonSecondary}"
+                                    Margin="0,0,10,0" Visibility="{Binding CancelText, Converter={StaticResource NotEmpty}}"/>
+                            <Button Content="{Binding OkText}" Command="{Binding Ok}" IsDefault="True">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource ButtonPrimary}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Danger}" Value="True">
+                                                <Setter Property="Background" Value="{StaticResource CriticalDim}"/>
+                                                <Setter Property="Foreground" Value="{StaticResource Critical}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

@@ -26,7 +26,7 @@ $ErrorActionPreference = 'Stop'
 $repo = Split-Path -Parent $PSScriptRoot
 $dotnet = 'D:\Projects\Velocity\.tools\dotnet\dotnet.exe'
 if (-not (Test-Path $dotnet)) { $dotnet = 'dotnet' }
-$work = Join-Path $env:TEMP 'pereezd-sandbox'
+$work = Join-Path $env:TEMP 'updater-sandbox'
 $usb = Join-Path $work 'usb'
 $pkg = Join-Path $usb 'Updater'
 $results = Join-Path $work 'results'
@@ -43,16 +43,16 @@ if (Get-Process WindowsSandbox, WindowsSandboxClient, WindowsSandboxRemoteSessio
 }
 
 Write-Host "Публикую exe…"
-& $dotnet publish (Join-Path $repo 'src\Pereezd.App\Pereezd.App.csproj') -c Release -o (Join-Path $repo 'publish') -nologo -v q
+& $dotnet publish (Join-Path $repo 'src\Updater.App\Updater.App.csproj') -c Release -o (Join-Path $repo 'publish') -nologo -v q
 if ($LASTEXITCODE -ne 0) { throw "Публикация не удалась" }
-& $dotnet build (Join-Path $repo 'tests\Pereezd.SelfCheck\Pereezd.SelfCheck.csproj') -nologo -v q
+& $dotnet build (Join-Path $repo 'tests\Updater.SelfCheck\Updater.SelfCheck.csproj') -nologo -v q
 if ($LASTEXITCODE -ne 0) { throw "Сборка проверок не удалась" }
 
 Write-Host "Собираю тестовую сборку…"
 if (Test-Path $work) { cmd /c rmdir /s /q "$work" | Out-Null }
 New-Item -ItemType Directory -Force $usb, $results | Out-Null
 Write-Host "  (скачиваю установщики на флешку: $Installers)"
-& $dotnet run --project (Join-Path $repo 'tests\Pereezd.SelfCheck') --no-build -- --demo-package $pkg --include $Include --installers $Installers | Select-Object -Last 3
+& $dotnet run --project (Join-Path $repo 'tests\Updater.SelfCheck') --no-build -- --demo-package $pkg --include $Include --installers $Installers | Select-Object -Last 3
 Copy-Item (Join-Path $repo 'publish\Updater.exe') (Join-Path $pkg 'Updater.exe')
 
 # Запуск внутри песочницы. Кириллицу в пути передаём через скрипт с BOM, а не через командную строку .wsb.
@@ -74,7 +74,7 @@ $wsb = @"
   <LogonCommand><Command>powershell.exe -ExecutionPolicy Bypass -File C:\Results\run.ps1</Command></LogonCommand>
 </Configuration>
 "@
-$wsbFile = Join-Path $work 'pereezd.wsb'
+$wsbFile = Join-Path $work 'updater.wsb'
 [IO.File]::WriteAllText($wsbFile, $wsb, [Text.UTF8Encoding]::new($false))
 
 Write-Host "Запускаю песочницу…"

@@ -1,4 +1,4 @@
-# Собирает src/Pereezd.Core/Catalog/winget-index.tsv.gz из индекса winget (source2.msix -> Public/index.db).
+# Собирает src/Updater.Core/Catalog/winget-index.tsv.gz из индекса winget (source2.msix -> Public/index.db).
 # Запуск: python -I build-winget-index.py <index.db> <out.tsv.gz>
 # Скачать индекс: https://cdn.winget.microsoft.com/cache/source2.msix (это zip).
 import sqlite3, sys, gzip, io

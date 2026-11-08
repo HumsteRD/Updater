@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <!-- Пользователь видит программу как Updater; пространства имён в коде остались прежними. -->
+    <AssemblyName>Updater</AssemblyName>
+    <RootNamespace>Updater.App</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>updater.ico</ApplicationIcon>
+    <AssemblyTitle>Updater — перенос на новую Windows</AssemblyTitle>
+
+    <!-- Один exe без установки: на свежей винде .NET нет, поэтому среда выполнения едет внутри. -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <PublishTrimmed>false</PublishTrimmed>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Updater.Core\Updater.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="updater.ico" />
+  </ItemGroup>
+
+</Project>

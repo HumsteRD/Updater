@@ -47,21 +47,20 @@
 ## Разработка
 
 Нужен .NET 9 SDK (подойдёт локальный из VELOCITY: `D:\Projects\Velocity\.tools\dotnet\dotnet.exe`).
-Внутренние имена проектов и пространств имён остались `Pereezd.*` — пользователь их не видит.
 
 ```bash
-dotnet build Pereezd.sln
-dotnet run --project tests/Pereezd.SelfCheck              # проверки в песочнице (≈125)
-dotnet run --project tests/Pereezd.SelfCheck -- --live    # плюс живой скан этого ПК (только чтение)
-dotnet publish src/Pereezd.App -c Release -o publish      # один Updater.exe ≈59 МБ, .NET внутри
+dotnet build Updater.sln
+dotnet run --project tests/Updater.SelfCheck              # проверки в песочнице (≈130)
+dotnet run --project tests/Updater.SelfCheck -- --live    # плюс живой скан этого ПК (только чтение)
+dotnet publish src/Updater.App -c Release -o publish      # один Updater.exe ≈59 МБ, .NET внутри
 ```
 
 Снимки экранов без запуска действий: `Updater.exe --shot collect out.png --section 2`
 (`home`, `collect`, `collect-progress`, `collect-done`, `restore`, `restore-progress`, `restore-done`;
 для распаковки нужен `--package <папка сборки>`). Тестовая сборка из несекретных мелочей этого ПК:
-`dotnet run --project tests/Pereezd.SelfCheck -- --demo-package <папка> [--include ids] [--installers ids]`.
+`dotnet run --project tests/Updater.SelfCheck -- --demo-package <папка> [--include ids] [--installers ids]`.
 
-Самопроверка пишет только во временную папку и в ветку реестра `HKCU\Software\Pereezd.SelfCheck`,
+Самопроверка пишет только во временную папку и в ветку реестра `HKCU\Software\Updater.SelfCheck`,
 которую удаляет; настоящие настройки только читает.
 
 ### Проверка распаковки на чистой Windows
@@ -79,11 +78,11 @@ dotnet publish src/Pereezd.App -c Release -o publish      # один Updater.exe
   `verify.txt`. По умолчанию проверяет установку с флешки без интернета; с `-UseWinget` — настоящий путь:
   Updater сам ставит winget (в песочнице его нет) и через него программы из `-Programs`.
 - **Безопасно на рабочем ПК:** добавь `--sandbox-root <временная папка> --offscreen` — пути уйдут во
-  временную папку, реестр — в `HKCU\Software\Pereezd.AutoTest` (удаляется), программы, драйверы и
+  временную папку, реестр — в `HKCU\Software\Updater.AutoTest` (удаляется), программы, драйверы и
   системные настройки пропускаются.
 
-- `src/Pereezd.Core` — вся логика: скан, сборы, распаковка, winget, настройки Windows.
+- `src/Updater.Core` — вся логика: скан, сборы, распаковка, winget, настройки Windows.
   Каталоги — данные: `Catalog/apps.json`, `games.json`, `windows.json`, `programs.json`, `installers.json`.
-- `src/Pereezd.App` — WPF, тема «Графит» из VELOCITY/FI.
+- `src/Updater.App` — WPF, тема «Графит» из VELOCITY/FI.
 - `tools/build-winget-index.py` — обновление встроенного индекса winget
   (`https://cdn.winget.microsoft.com/cache/source2.msix` → `Public/index.db`).
